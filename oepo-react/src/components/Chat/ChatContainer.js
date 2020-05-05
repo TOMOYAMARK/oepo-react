@@ -7,6 +7,13 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 
 
+//
+//チャットのメッセージ表示部分 メッセージの配列をpropsとして受け取り、それをリスト表示する。
+//
+
+
+
+
 class ChatDisplay extends React.Component{
   constructor(props){
     super(props)
