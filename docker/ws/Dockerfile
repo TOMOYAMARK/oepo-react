@@ -13,7 +13,7 @@ EXPOSE 3003
 
 RUN apk update && apk add git
 #一度deployブランチのgitリポジトリ全体を未公開領域(.git)にクローン→workingdirの設定
-RUN git clone -b deploy https://8ac016bd8dbabf65e0046e0f5f688b838ee1c509:x-oauth-basic@github.com/Eiganken/oepori.git /.git
+RUN git clone -b deploy https://1ecc935108d0e3ceeabd3d3d1fb23360fc36d2d2:x-oauth-basic@github.com/TOMOYAMARK/oepo-react.git /.git
 WORKDIR /.git
 RUN git config core.sparsecheckout true && touch .git/info/sparsecheckout && echo /docker/app > .git/info/sparsecheckout
 RUN git read-tree -m -u HEAD
