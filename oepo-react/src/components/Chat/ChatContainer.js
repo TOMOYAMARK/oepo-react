@@ -9,7 +9,7 @@ import Button from '@material-ui/core/Button';
 
 class ChatDisplay extends React.Component{
   constructor(props){
-    super(props)
+    super(props);
   }
 
   render() {
@@ -26,7 +26,11 @@ class ChatDisplay extends React.Component{
 export class ChatContainer extends React.Component{
 
   constructor(props){
-    super(props)
+    super(props);
+
+    // websocketの準備
+    this.webSocket = new WebSocket("ws://localhost:3000");
+    this.webSocket.onmessage = (e => this.handleOnMessage(e));
 
     this.state = {
       msgValue:"",
@@ -36,16 +40,26 @@ export class ChatContainer extends React.Component{
   }
 
   handleSubmit(msg){
-    //メッセージ本文と送信主のステータスを受け取り
-    //メッセージキューに追加
+    // メッセージ本文と送信主のステータスをサーバーに送信
 
     msg.status = "JKニキ"; //!TEST!
+    const json = JSON.stringify(msg);
+    this.webSocket.send(json); // websocketに送信!
+  }
 
-    var msgQueue = this.state.msgQueue.slice()
-    msgQueue.push(msg)
+  handleOnMessage(e){
+    //メッセージ本文と送信主のステータスをサーバーから受け取り
+    //メッセージキューに追加
+
+    const json = e.data;
+    const msg = JSON.parse(json);
+
+    var msgQueue = this.state.msgQueue.slice();
+    msgQueue.push(msg);
+
     this.setState({
       msgQueue:msgQueue
-    })
+    });
   }
 
   render() {
@@ -76,3 +90,20 @@ export class ChatContainer extends React.Component{
   }
 }
 
+class Message {
+  constructor(msg){
+    this.status = msg.status;
+    this.body = msg.body;
+  }
+
+  get obj() {
+    return {
+      status: this.status,
+      body: this.body,
+    };
+  }
+
+  get json() {
+    return JSON.stringify(this.obj);
+  }
+}
