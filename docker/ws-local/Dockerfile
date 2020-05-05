@@ -8,6 +8,13 @@ WORKDIR /
 
 WORKDIR /app
 
-RUN npm install -g npm && \
-    npm install --save ws
+EXPOSE 8080
+EXPOSE 3000
+EXPOSE 3001
+EXPOSE 3002
+EXPOSE 3003
 
+RUN npm install -g npm
+RUN npm install --save ws
+RUN npm install
+CMD npm run start
