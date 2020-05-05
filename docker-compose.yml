@@ -1,0 +1,15 @@
+version: '3'
+services:
+  oepori-localws:
+    build:
+      context: .
+    container_name: localws
+    volumes:
+      - ./server:/app
+    working_dir: /app
+    ports:
+      - 3000:3000
+      - 3001:3001
+      - 3002:3002
+      - 8080:8080
+    tty: true
