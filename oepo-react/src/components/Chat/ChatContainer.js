@@ -29,7 +29,7 @@ export class ChatContainer extends React.Component{
     super(props);
 
     // websocketの準備
-    this.webSocket = new WebSocket("ws://localhost:3000");
+    this.webSocket = new WebSocket("ws://34.85.36.109:3000");
     this.webSocket.onmessage = (e => this.handleOnMessage(e));
 
     this.state = {
