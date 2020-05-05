@@ -39,26 +39,26 @@ wss.on('connection', function(ws) {
         wss.broadcast(message);
 
         // ゲーム実行時の処理
-        const data = JSON.parse(message);
-        if (isPlayingGame) {
-            // 答えが合っているかどうか
-            if (data.text == theme) {
-                wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.name} が正解しました。` }));
-                wss.broadcast(JSON.stringify({ "name": "答え", "text": `${theme}` }));
+        // const data = JSON.parse(message);
+        // if (isPlayingGame) {
+        //     // 答えが合っているかどうか
+        //     if (data.text == theme) {
+        //         wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.name} が正解しました。` }));
+        //         wss.broadcast(JSON.stringify({ "name": "答え", "text": `${theme}` }));
 
-                // 回答者とお題の更新
-                updateAnswers();
-                updateTheme();
+        //         // 回答者とお題の更新
+        //         updateAnswers();
+        //         updateTheme();
 
-                // 回答者の交代とお題の送信
-                console.log(answer);
-                console.log(users);
-                const gameStateStr = JSON.stringify({ "theme": theme, "answer": answer });
-                const json = JSON.stringify({ state: "game-data", data: gameStateStr });
-                console.log(json);
-                wsgame.broadcast(json);
-            }
-        }
+        //         // 回答者の交代とお題の送信
+        //         console.log(answer);
+        //         console.log(users);
+        //         const gameStateStr = JSON.stringify({ "theme": theme, "answer": answer });
+        //         const json = JSON.stringify({ state: "game-data", data: gameStateStr });
+        //         console.log(json);
+        //         wsgame.broadcast(json);
+        //     }
+        // }
     });
 });
 //-----------------//
