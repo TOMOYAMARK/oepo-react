@@ -9,6 +9,9 @@ import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
 import Button from '@material-ui/core/Button';
 
+//
+//Lobby画面Container
+//
 class LobbyScreen extends React.Component{
   
   constructor(props){
@@ -31,6 +34,24 @@ class LobbyScreen extends React.Component{
             </Input>
           </FormControl>
         <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.props.goToGame(this.state.userName)}>ゲームへ</Button>
+      </div>
+    )
+  }
+}
+
+//
+//お絵かき画面（ゲーム画面)のcontainer
+//
+class OekakiScreen extends React.Component{
+  render(){
+    return (
+      <div className="game-container">
+        <AppBar />
+    
+        <CanvasContainer/> 
+        <ChatContainer userName={this.props.userName}/>
+
+        <ControlPanel />
       </div>
     )
   }
@@ -71,15 +92,7 @@ export class Game extends React.Component{
     //ゲーム画面
     else if(this.state.screenState === this.screenStates.GAME){
       return (
-        <div className="game-container">
-          <AppBar />
-  
-          <CanvasContainer/> 
-          <ChatContainer userName={this.state.userName}/>
-  
-          <ControlPanel />
-  
-        </div>
+        <OekakiScreen userName = {this.state.userName}/>
       )
     }
 
