@@ -1,0 +1,8 @@
+@import "../_variables";
+
+.control-panel{
+  clear: left;
+  background-color:wheat;
+  width:$gameWidth;
+  height:calc(#{$gameHeight} * 0.3);
+}
