@@ -1,0 +1,11 @@
+@import "../_variables";
+
+$canvasContainerWidth : $gameWidth * 0.7;
+$canvasContainerHeight : $gameHeight * 0.7;
+
+.canvas-container{
+  float:left;
+  background-color: grey;
+  width: $canvasContainerWidth;
+  height: $canvasContainerHeight;
+}

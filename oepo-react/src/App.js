@@ -2,12 +2,12 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-import {ChatContainer} from './components/Chat/ChatContainer'
+import {Game} from './components/Game/Game'
 
 function App() {
   return (
     <div className="App">
-      <ChatContainer />
+      <Game />
     </div>
   );
 }

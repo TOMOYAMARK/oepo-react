@@ -1,5 +1,6 @@
 import React from 'react';
 import './Chat.scss'
+import style from '../_variables.scss'
 import TextField from '@material-ui/core/TextField';
 import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
@@ -16,14 +17,14 @@ import Button from '@material-ui/core/Button';
 
 class ChatDisplay extends React.Component{
   constructor(props){
-    super(props)
+    super(props);
   }
 
   render() {
     return (
       <div className="chat-disp">
         {this.props.msgQueue.map((item) => (
-          <p><span class="status-txt">{item.status}</span>:<span class="msg-txt">{item.body}</span> </p>
+          <p><span className="status-txt">{item.status}</span>:<span className="msg-txt">{item.body}</span> </p>
         ))}
       </div>
     )
@@ -33,26 +34,39 @@ class ChatDisplay extends React.Component{
 export class ChatContainer extends React.Component{
 
   constructor(props){
-    super(props)
+    super(props);
+
+    // websocketの準備
+    this.webSocket = new WebSocket("ws://34.85.36.109:3000");
+    this.webSocket.onmessage = (e => this.handleOnMessage(e));
 
     this.state = {
       msgValue:"",
       msgQueue:[],
-      userName:"",//おそらくpropsになるが
     }
   }
 
   handleSubmit(msg){
-    //メッセージ本文と送信主のステータスを受け取り
+    // メッセージ本文と送信主のステータスをサーバーに送信
+
+    console.log(msg)
+    const json = JSON.stringify(msg);
+    this.webSocket.send(json); // websocketに送信!
+  }
+
+  handleOnMessage(e){
+    //メッセージ本文と送信主のステータスをサーバーから受け取り
     //メッセージキューに追加
 
-    msg.status = "JKニキ"; //!TEST!
+    const json = e.data;
+    const msg = JSON.parse(json);
 
-    var msgQueue = this.state.msgQueue.slice()
-    msgQueue.push(msg)
+    var msgQueue = this.state.msgQueue.slice();
+    msgQueue.push(msg);
+
     this.setState({
       msgQueue:msgQueue
-    })
+    });
   }
 
   render() {
@@ -61,25 +75,42 @@ export class ChatContainer extends React.Component{
 
         <ChatDisplay msgQueue={this.state.msgQueue}/>
         <Grid xs="12" container>
-          <FormControl className="txt-field" variant="outlined" style={{width:'430px'}} defaultValue="">
+          <FormControl className="txt-field" variant="outlined" style={{width:`calc(${style.chatWidth} - 50px)`}} defaultValue="">
             <Input
             style={{height:'50px'}}
             value={this.state.msgValue}
             onChange={event => this.setState({msgValue: event.target.value})}>
             </Input>
           </FormControl>
-          <Button className="submit-btn" variant="contained" 
-            style={{width:'70px'}} disableElevation
+          <button className="submit-btn"
+            style={{width:'50px'}} 
             onClick={ () => this.handleSubmit({
-              status:this.state.userName,
+              status:this.props.userName,
               body:this.state.msgValue
             })}
           >
               送信
-          </Button>
+          </button>
         </Grid>
       </div>
     )
   }
 }
 
+class Message {
+  constructor(msg){
+    this.status = msg.status;
+    this.body = msg.body;
+  }
+
+  get obj() {
+    return {
+      status: this.status,
+      body: this.body,
+    };
+  }
+
+  get json() {
+    return JSON.stringify(this.obj);
+  }
+}
