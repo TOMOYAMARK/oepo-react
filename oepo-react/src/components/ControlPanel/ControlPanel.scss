@@ -1,8 +1,19 @@
 @import "../_variables";
 
+$panelHeight:calc(#{$gameHeight} * 0.3);
+
+$userContainerWidth:$gameWidth/8;
+
 .control-panel{
   clear: left;
   background-color:wheat;
   width:$gameWidth;
-  height:calc(#{$gameHeight} * 0.3);
+  height:$panelHeight;
+
+  .user-container{
+    background-color: red;
+    border: 1px solid pink;
+    width:$userContainerWidth;
+    height:$panelHeight;
+  }
 }

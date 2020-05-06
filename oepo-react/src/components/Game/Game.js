@@ -45,6 +45,29 @@ class LobbyScreen extends React.Component{
 //お絵かき画面（ゲーム画面)のcontainer
 //
 class OekakiScreen extends React.Component{
+  constructor(props){
+    super(props)
+
+      // websocketの準備
+      this.webSocket = new WebSocket("ws://34.85.36.109:3002");
+      this.webSocket.onmessage = (e => this.handleOnMessage(e));
+
+      this.state = {
+        users:[this.props.userName,'hoge','huge','foo'], //**部屋に存在するユーザ**//
+      }
+  }
+  
+  handleOnMessage(e){
+    //**部屋参加時に、ルームの情報を取得**//
+    //**usersを初期化して、GUIコンポーネントのpropsにつっこむ**// 
+
+    const json = e.data;
+    const msg = JSON.parse(json);
+
+    console.log(msg)
+
+  }
+
   render(){
     return (
       <div className="game-container">
@@ -53,7 +76,7 @@ class OekakiScreen extends React.Component{
         <CanvasContainer/> 
         <ChatContainer userName={this.props.userName}/>
 
-        <ControlPanel />
+        <ControlPanel users={this.state.users}/>
       </div>
     )
   }
