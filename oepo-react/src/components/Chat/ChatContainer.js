@@ -17,7 +17,7 @@ class ChatDisplay extends React.Component{
     return (
       <div className="chat-disp">
         {this.props.msgQueue.map((item) => (
-          <p><span class="status-txt">{item.status}</span>:<span class="msg-txt">{item.body}</span> </p>
+          <p><span className="status-txt">{item.status}</span>:<span className="msg-txt">{item.body}</span> </p>
         ))}
       </div>
     )
@@ -36,14 +36,13 @@ export class ChatContainer extends React.Component{
     this.state = {
       msgValue:"",
       msgQueue:[],
-      userName:"",//おそらくpropsになるが
     }
   }
 
   handleSubmit(msg){
     // メッセージ本文と送信主のステータスをサーバーに送信
 
-    msg.status = "JKニキ"; //!TEST!
+    console.log(msg)
     const json = JSON.stringify(msg);
     this.webSocket.send(json); // websocketに送信!
   }
@@ -79,7 +78,7 @@ export class ChatContainer extends React.Component{
           <button className="submit-btn"
             style={{width:'50px'}} 
             onClick={ () => this.handleSubmit({
-              status:this.state.userName,
+              status:this.props.userName,
               body:this.state.msgValue
             })}
           >

@@ -4,21 +4,84 @@ import {ChatContainer} from '../Chat/ChatContainer'
 import {AppBar} from '../AppBar/AppBar'
 import {CanvasContainer} from '../Canvas/CanvasContainer'
 import {ControlPanel} from '../ControlPanel/ControlPanel'
+
+import FormControl from '@material-ui/core/FormControl';
+import Input from '@material-ui/core/Input';
+import Button from '@material-ui/core/Button';
+
+class LobbyScreen extends React.Component{
+  
+  constructor(props){
+    super(props)
+
+    this.state = {
+      userName:"Anonymous",
+    }
+
+  }
+  render(){
+    return (
+      <div>
+        <p>this is lobby</p>
+        <FormControl className="txt-field" variant="outlined" >
+            <Input
+            style={{height:'50px'}}
+            value={this.state.userName}
+            onChange={event => this.setState({userName: event.target.value})}>
+            </Input>
+          </FormControl>
+        <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.props.goToGame(this.state.userName)}>ゲームへ</Button>
+      </div>
+    )
+  }
+}
+
+
 export class Game extends React.Component{
+  constructor(props){
+    super(props)
+
+    this.screenStates = {
+      'LOBBY':0,
+      'GAME':1,
+    }
+    this.state = {
+      //最初はロビー(名前入力)から
+      screenState:this.screenStates.LOBBY,
+      userName:undefined,
+    }
+  }
+
+  //
+  //ロビーからゲーム画面へ移行する。そのとき、ユーザ名を入力してもらう。
+  //
+  goToGame(userName){
+    this.setState({userName:userName})
+    this.setState({screenState:this.screenStates.GAME})
+  }
 
 
   render(){
-    return (
-      <div className="game-container">
-        <AppBar />
-
-        <CanvasContainer/> 
-        <ChatContainer />
-
-        <ControlPanel />
-
-      </div>
-    )
+    //ロビー画面
+    if(this.state.screenState === this.screenStates.LOBBY){
+      return (
+        <LobbyScreen goToGame={(name) => this.goToGame(name)}/>
+      )
+    }
+    //ゲーム画面
+    else if(this.state.screenState === this.screenStates.GAME){
+      return (
+        <div className="game-container">
+          <AppBar />
+  
+          <CanvasContainer/> 
+          <ChatContainer userName={this.state.userName}/>
+  
+          <ControlPanel />
+  
+        </div>
+      )
+    }
 
   }
 }
