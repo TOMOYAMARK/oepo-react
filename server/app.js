@@ -7,7 +7,7 @@ let isPlayingGame = true;
 
 let getRandom = n => { return Math.floor(Math.random() * n); };
 let updateTheme = () => theme = themes[getRandom(themes.length)];
-let updateAnswers = () => answer = users[getRandom(users.length)];
+//let updateAnswers = () => answer = users[getRandom(users.length)];
 
 //--http--//(共存テスト用)
 var server = http.createServer(function(request, response) {
@@ -111,7 +111,6 @@ wsgame.on('connection', function(ws) {
         console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
 
         if (data.state == "join-room") {
-            users.push(data.user);
 
             //用意していた辞書にuser情報を付与
             connects.set(ws,data.user);
