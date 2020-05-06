@@ -47,14 +47,21 @@ class LobbyScreen extends React.Component{
 class OekakiScreen extends React.Component{
   constructor(props){
     super(props)
+    this.state = {
+      users:[this.props.userName,'hoge','huge','foo'], //!!部屋に存在するユーザ!!//
 
-      // websocketの準備
-      this.webSocket = new WebSocket("ws://34.85.36.109:3002");
-      this.webSocket.onmessage = (e => this.handleOnMessage(e));
+    }
+  }
 
-      this.state = {
-        users:[this.props.userName,'hoge','huge','foo'], //**部屋に存在するユーザ**//
-      }
+  componentDidMount(){ 
+    // websocketの準備
+    this.webSocket = new WebSocket("ws://34.85.36.109:3002");
+    this.webSocket.onopen = (e => this.handleOnOpen(e));
+    this.webSocket.onmessage = (e => this.handleOnMessage(e));
+
+    //!! constructorに接続の処理を書こうと思ったが、コンソールを見ると、処理が二回連続で実行されるため、 !!//
+    //!! とりあえず違うライフサイクルフックに移動 !!//
+
   }
   
   handleOnMessage(e){
@@ -66,6 +73,26 @@ class OekakiScreen extends React.Component{
 
     console.log(msg)
 
+  }
+
+  handleOnOpen(e){
+    //ソケットの接続が確立したらjoin-roomの信号を出し、ルーム情報を受け取る。
+    this.joinGame()
+  }
+
+  joinGame(){
+    //部屋に参加したフラグをサーバーに送信(join-room)
+    var msg = {
+      state:"join-room",
+      user:{
+        id:0,//!
+        name:this.props.userName,
+      }
+    }
+
+    console.log(msg)
+    const json = JSON.stringify(msg);
+    this.webSocket.send(json); // websocketに送信!
   }
 
   render(){

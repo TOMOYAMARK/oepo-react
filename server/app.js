@@ -102,6 +102,7 @@ wsgame.broadcast = function(data) {
 
 
 wsgame.on('connection', function(ws) {
+
     ws.on('message', function(message) {
         let data = JSON.parse(message);
         let now = new Date();
@@ -111,7 +112,9 @@ wsgame.on('connection', function(ws) {
         if (data.state == "join-room") {
             users.push(data.user);
             wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.user.name} が入室しました。` }));
-            //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる
+            //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる 
+            //** join-roomはメッセージより closeのとこに書いた方がよさそう **//
+            //** →ユーザがブラウザを閉じて離れた場合に検知できない？　**//
             users.forEach(function(user) {
                 wsgame.broadcast(JSON.stringify({
                     "state": "player",
