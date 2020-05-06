@@ -92,7 +92,7 @@ wscanvas.on('connection', function(ws) {
 //---websocket game---//
 var wsgame = new ws({ port: 3002 });
 
-//** socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け **//
+// socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け 
 var connects = new Map([]);
 
 wsgame.broadcast = function(data) {
@@ -138,7 +138,14 @@ wsgame.on('connection', function(ws) {
       // 接続が切れた場合
       ws.on('close', () => {
         //対応したwsをkeyにもつユーザ情報を削除
+        var leavingUser = connects.get(ws)
         connects.delete(ws)
+        //退室しやユーザをブロードキャスト
+        wsgame.broadcast(JSON.stringify({
+            "state": "leave-room",
+            "data": leavingUser,
+        }))
+
       });
 });
 //-----------------//
