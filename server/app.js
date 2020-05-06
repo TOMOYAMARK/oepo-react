@@ -113,7 +113,7 @@ wsgame.on('connection', function(ws) {
             users.push(data.user);
             wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.user.name} が入室しました。` }));
             //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる 
-            //** join-roomはメッセージより closeのとこに書いた方がよさそう **//
+            //** leave-roomはメッセージより closeのとこに書いた方がよさそう **//
             //** →ユーザがブラウザを閉じて離れた場合に検知できない？　**//
             users.forEach(function(user) {
                 wsgame.broadcast(JSON.stringify({
@@ -132,5 +132,11 @@ wsgame.on('connection', function(ws) {
             wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `ゲームモードが ${gameMode} に変更されました。` }));
         }
     });
+
+      // 接続が切れた場合
+      ws.on('close', () => {
+        //** ここで、接続が切れたユーザのIDを判別して、部屋情報から消去したい。 **//
+          console.log('I lost a client');
+      });
 });
 //-----------------//

@@ -48,7 +48,8 @@ class OekakiScreen extends React.Component{
   constructor(props){
     super(props)
     this.state = {
-      users:[this.props.userName,'hoge','huge','foo'], //!!部屋に存在するユーザ!!//
+      //** usersはユーザid(サーバから与えられる)をkeyとしたdictionaryになる？ **//
+      users:[], //!!部屋に存在するユーザ!!//
 
     }
   }
@@ -65,11 +66,17 @@ class OekakiScreen extends React.Component{
   }
   
   handleOnMessage(e){
-    //**部屋参加時に、ルームの情報を取得**//
-    //**usersを初期化して、GUIコンポーネントのpropsにつっこむ**// 
-
     const json = e.data;
     const msg = JSON.parse(json);
+
+    if(msg.state === "player"){
+      //部屋に参加しているプレイヤーの情報を反映
+
+      //** usersはユーザid(サーバから与えられる)をkeyとしたdictionaryになる？ **//
+      var users = this.state.users.slice()
+      users.push(msg.data.name)
+      this.setState({users:users})
+    }
 
     console.log(msg)
 
@@ -85,7 +92,7 @@ class OekakiScreen extends React.Component{
     var msg = {
       state:"join-room",
       user:{
-        id:0,//!
+        id:0, //!!テスト!!//
         name:this.props.userName,
       }
     }
