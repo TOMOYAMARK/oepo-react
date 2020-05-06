@@ -71,7 +71,7 @@ export class Game extends React.Component{
     this.state = {
       //最初はロビー(名前入力)から
       screenState:this.screenStates.LOBBY,
-      userName:undefined,
+      userName:"Anonymous",
     }
   }
 
