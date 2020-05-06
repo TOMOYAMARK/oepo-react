@@ -47,10 +47,11 @@ class LobbyScreen extends React.Component{
 class OekakiScreen extends React.Component{
   constructor(props){
     super(props)
-    this.state = {
-      //** usersはユーザid(サーバから与えられる)をkeyとしたdictionaryになる？ **//
-      users:[], //!!部屋に存在するユーザ!!//
 
+    //!! 今はユーザ名をkeyとしているから、同名ユーザを扱えない。 → サーバ側で、唯一無二のid(wsのハッシュがよさそうだけど・・・)を与えるべきか !!//
+    this.userMap = new Map([])
+    this.state = {
+      users:[], //!!部屋に存在するユーザ!!//
     }
   }
 
@@ -69,13 +70,25 @@ class OekakiScreen extends React.Component{
     const json = e.data;
     const msg = JSON.parse(json);
 
-    if(msg.state === "player"){
-      //部屋に参加しているプレイヤーの情報を反映
+    var users = this.state.users.slice()
 
-      //** usersはユーザid(サーバから与えられる)をkeyとしたdictionaryになる？ **//
-      var users = this.state.users.slice()
-      users.push(msg.data.name)
+    if(msg.state === "player"){
+      //部屋に参加しているプレイヤーの情報を反映 → ハッシュテーブルじゃなくても、
+      //  本質的にはサーバ側で唯一のユーザIDを生成できれば良い。 いまは取り急ぎ
+      if(!this.userMap.has(msg.data.name)){
+        //もし同じ情報を持つユーザが部屋にいない（新規ユーザ）ならば、usersに追加
+        this.userMap.set(msg.data.name,msg.data)
+        users.push(msg.data.name)
+      }
       this.setState({users:users})
+    }
+    else if(msg.state === "leave-room"){
+      var leavingUser = this.userMap.get(msg.data.name)
+      this.userMap.delete(msg.data.name)
+
+      const newUsers = users.filter(u => u !== leavingUser.name);
+
+      this.setState({users:newUsers})
     }
 
     console.log(msg)
