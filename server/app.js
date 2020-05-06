@@ -1,6 +1,4 @@
 var http = require('http');
-
-let users = new Array();
 const themes = ["itigo", "meronn", "mikann", "kyuuri"];
 
 let theme = "itigo";
@@ -94,15 +92,18 @@ wscanvas.on('connection', function(ws) {
 //---websocket game---//
 var wsgame = new ws({ port: 3002 });
 
+//** socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け **//
+var connects = new Map([]);
+
 wsgame.broadcast = function(data) {
-    wsgame.clients.forEach(function(client) {
+    connects.forEach((value,client,map) =>  {
         client.send(data);
     });
 };
 
 
 wsgame.on('connection', function(ws) {
-
+  connects.set(ws,undefined); // userMapにキーのみ装填 (user情報はまだ送信されていない。)
     ws.on('message', function(message) {
         let data = JSON.parse(message);
         let now = new Date();
@@ -111,20 +112,22 @@ wsgame.on('connection', function(ws) {
 
         if (data.state == "join-room") {
             users.push(data.user);
+
+            //用意していた辞書にuser情報を付与
+            connects.set(ws,data.user);
+
             wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.user.name} が入室しました。` }));
             //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる 
-            //** leave-roomはメッセージより closeのとこに書いた方がよさそう **//
-            //** →ユーザがブラウザを閉じて離れた場合に検知できない？　**//
-            users.forEach(function(user) {
+            connects.forEach((value,key,map) => {
                 wsgame.broadcast(JSON.stringify({
                     "state": "player",
-                    "data": user
+                    "data": value
                 }))
             })
-        } else if (data.state == "leave-room") {
+        } /*else if (data.state == "leave-room") {
             const pos = users.findIndex(user => user.id == data.user.id);
             users = users.splice(pos, 1);
-        } else if (data.state == "select-game-mode") {
+        }*/ else if (data.state == "select-game-mode") {
             let sendData = JSON.stringify({ "state": "game-data", "data": data.data });
             let gameMode = "";
             if (data.data.gameMode == "egokoro") gameMode = "エゴコロクイズ";
@@ -135,8 +138,8 @@ wsgame.on('connection', function(ws) {
 
       // 接続が切れた場合
       ws.on('close', () => {
-        //** ここで、接続が切れたユーザのIDを判別して、部屋情報から消去したい。 **//
-          console.log('I lost a client');
+        //対応したwsをkeyにもつユーザ情報を削除
+        connects.delete(ws)
       });
 });
 //-----------------//
