@@ -48,6 +48,7 @@ class OekakiScreen extends React.Component{
   constructor(props){
     super(props)
 
+    //!! 今はユーザ名をkeyとしているから、同名ユーザを扱えない。 → サーバ側で、唯一無二のid(wsのハッシュがよさそうだけど・・・)を与えるべきか !!//
     this.userMap = new Map([])
     this.state = {
       users:[], //!!部屋に存在するユーザ!!//
