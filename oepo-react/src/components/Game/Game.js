@@ -24,16 +24,18 @@ class LobbyScreen extends React.Component{
   }
   render(){
     return (
-      <div>
-        <p>this is lobby</p>
-        <FormControl className="txt-field" variant="outlined" >
-            <Input
-            style={{height:'50px'}}
-            value={this.state.userName}
-            onChange={event => this.setState({userName: event.target.value})}>
-            </Input>
-          </FormControl>
-        <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.props.goToGame(this.state.userName)}>ゲームへ</Button>
+      <div className="lobby-container">
+        <div className="inputs">
+          <p>This is LOBBY!</p>
+          <FormControl className="txt-field" variant="outlined" >
+              <Input
+              style={{height:'50px'}}
+              value={this.state.userName}
+              onChange={event => this.setState({userName: event.target.value})}>
+              </Input>
+            </FormControl>
+          <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.props.goToGame(this.state.userName)}>ゲームへ</Button>
+        </div>
       </div>
     )
   }

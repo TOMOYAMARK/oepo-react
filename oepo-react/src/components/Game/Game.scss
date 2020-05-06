@@ -7,3 +7,20 @@
   width: $gameWidth ;
   height: $gameHeight ;
 }
+
+.lobby-container{
+  margin : 0 auto;
+  height:$gameHeight;
+  width:$gameWidth;
+  position:relative;
+  .inputs{
+    height:100px;
+    width:500px;
+    margin: auto;
+    position:absolute; //🤔
+    top:0;
+    left:0;
+    right: 0;
+    bottom: 0;
+  }
+}
