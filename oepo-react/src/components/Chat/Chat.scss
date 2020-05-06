@@ -1,14 +1,16 @@
+@import "../_variables";
+
 
 .chat-container{
-
-    height:655px;
-    width:500px;
+    float:left;
+    height:$chatHeight;
+    width:$chatWidth;
     background-color:#FFAAFF;
 
     .chat-disp{
-        text-align: left !important;
-        height:600px;
-        width:100%;
+        text-align: left;
+        height:calc( #{$chatHeight} - 50px);
+        width:$chatWidth;
         background-color: #FFFFAA;
 
         overflow-y:scroll;

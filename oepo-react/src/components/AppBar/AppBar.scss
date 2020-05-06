@@ -1,0 +1,11 @@
+@import "../_variables";
+
+$appbarWidth : $gameWidth;
+$appbarHeight : 50px;
+
+
+.app-bar{
+  width: $appbarWidth;
+  height: $appbarHeight;
+  background-color: blue;
+}

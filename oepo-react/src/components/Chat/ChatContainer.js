@@ -1,5 +1,6 @@
 import React from 'react';
 import './Chat.scss'
+import style from '../_variables.scss'
 import TextField from '@material-ui/core/TextField';
 import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
@@ -68,22 +69,22 @@ export class ChatContainer extends React.Component{
 
         <ChatDisplay msgQueue={this.state.msgQueue}/>
         <Grid xs="12" container>
-          <FormControl className="txt-field" variant="outlined" style={{width:'430px'}} defaultValue="">
+          <FormControl className="txt-field" variant="outlined" style={{width:`calc(${style.chatWidth} - 50px)`}} defaultValue="">
             <Input
             style={{height:'50px'}}
             value={this.state.msgValue}
             onChange={event => this.setState({msgValue: event.target.value})}>
             </Input>
           </FormControl>
-          <Button className="submit-btn" variant="contained" 
-            style={{width:'70px'}} disableElevation
+          <button className="submit-btn"
+            style={{width:'50px'}} 
             onClick={ () => this.handleSubmit({
               status:this.state.userName,
               body:this.state.msgValue
             })}
           >
               送信
-          </Button>
+          </button>
         </Grid>
       </div>
     )

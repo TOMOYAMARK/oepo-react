@@ -1,0 +1,9 @@
+
+@import "../_variables";
+
+.game-container{
+  margin: 0 auto;
+  background-color: red;
+  width: $gameWidth ;
+  height: $gameHeight ;
+}
