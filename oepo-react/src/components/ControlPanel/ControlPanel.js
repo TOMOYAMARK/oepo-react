@@ -9,8 +9,8 @@ export class ControlPanel extends React.Component{
     return (
       <div className="control-panel">
         <Grid container>
-          {this.props.users.map((user) => (
-            <div className="user-container" >
+          {this.props.users.map((user,i) => (
+            <div key={i} className="user-container" >
               {user}
             </div>
           ))}

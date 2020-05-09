@@ -16,8 +16,8 @@ class ChatDisplay extends React.Component{
   render() {
     return (
       <div className="chat-disp">
-        {this.props.msgQueue.map((item) => (
-          <p><span className="status-txt">{item.status}</span>:<span className="msg-txt">{item.body}</span> </p>
+        {this.props.msgQueue.map((item,i) => (
+          <p key={i}><span className="status-txt">{item.status}</span>:<span className="msg-txt">{item.body}</span> </p>
         ))}
       </div>
     )
@@ -67,7 +67,7 @@ export class ChatContainer extends React.Component{
       <div className="chat-container">
 
         <ChatDisplay msgQueue={this.state.msgQueue}/>
-        <Grid xs="12" container>
+        <Grid container>
           <FormControl className="txt-field" variant="outlined" style={{width:`calc(${style.chatWidth} - 50px)`}} defaultValue="">
             <Input
             style={{height:'50px'}}

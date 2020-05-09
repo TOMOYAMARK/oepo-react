@@ -56,6 +56,18 @@ class OekakiScreen extends React.Component{
     }
   }
 
+  async fetchOekakiTheme(){
+    //テーマ取得にもオプションがつくかもしれないのでpostです
+    await axios
+      .post( "/api/fetch/theme","{}")
+      .then(res => {
+        console.log(res.data)
+      })
+      .catch(() => {
+        console.log("エラー");
+      }); 
+  }
+
   componentDidMount(){ 
     // websocketの準備
     this.webSocket = new WebSocket("ws://34.85.36.109:3002");
@@ -64,23 +76,6 @@ class OekakiScreen extends React.Component{
 
     //!! constructorに接続の処理を書こうと思ったが、コンソールを見ると、処理が二回連続で実行されるため、 !!//
     //!! とりあえず違うライフサイクルフックに移動 !!//
-
-    //!!httpリクエストのテスト!!//
-    var form = {
-      test:"empty"
-    };
-    const json = JSON.stringify(form);
-
-    axios
-      .post( "/api/fetch/theme",json)
-      .then(res => {
-        console.log(res.data)
-      })
-      .catch(() => {
-        console.log("エラー");
-      });
-
-
   }
 
 
