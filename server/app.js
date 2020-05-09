@@ -52,7 +52,17 @@ app.post('/api/fetch/theme', function(req, res) {
 var server = app.listen(8080, function(){
   console.log("Node.js is listening to PORT:" + server.address().port);
 });
+
+app.post('/game/change/state',(req,res) => {
+  
+})
 //ここまでhttpレスポンス処理//
+
+
+// socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け 
+var connects = new Map([])
+// {userID(サーバ内で生成→userオブジェクトに注入):wsオブジェクト}でユーザのHTTPリクエストを判別
+var userIDMap = {}
 
 const themes = ["itigo", "meronn", "mikann", "kyuuri"];
 
@@ -140,8 +150,7 @@ wscanvas.on('connection', function(ws) {
 //---websocket game---//
 var wsgame = new ws({ port: 3002 });
 
-// socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け 
-var connects = new Map([]);
+
 
 wsgame.broadcast = function(data) {
     connects.forEach((value,client,map) =>  {

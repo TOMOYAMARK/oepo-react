@@ -9,6 +9,12 @@ import {ControlPanel} from '../ControlPanel/ControlPanel'
 import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
 import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import InputLabel from '@material-ui/core/InputLabel';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
+
 
 //
 //Lobby画面Container
@@ -19,7 +25,9 @@ class LobbyScreen extends React.Component{
     super(props)
 
     this.state = {
-      userName:"Anonymous",
+      userName:"",
+      password:"",
+      showPassword:false,
     }
 
   }
@@ -27,14 +35,39 @@ class LobbyScreen extends React.Component{
     return (
       <div className="lobby-container">
         <div className="inputs">
+          <div className="input-field">
           <p>This is LOBBY!</p>
           <FormControl className="txt-field" variant="outlined" >
+          <InputLabel htmlFor="standard-adornment-username">Username</InputLabel>
               <Input
-              style={{height:'50px'}}
+              style={{height:'50px',width:'300px'}}
               value={this.state.userName}
               onChange={event => this.setState({userName: event.target.value})}>
               </Input>
             </FormControl>
+            </div>
+            <div className="input-field">
+          <FormControl variant="outlined">
+          <InputLabel htmlFor="standard-adornment-password">Password</InputLabel>
+          <Input
+            id="password"
+            style={{height:'50px',width:'300px'}}
+            type={this.state.showPassword ? 'text' : 'password'}
+            value={this.state.password}
+            onChange={event => this.setState({password: event.target.value})}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={event => this.setState({showPassword: !this.state.showPassword})}
+                >
+                  {this.state.showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+        </FormControl>
+        </div>
           <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.props.goToGame(this.state.userName)}>ゲームへ</Button>
         </div>
       </div>
