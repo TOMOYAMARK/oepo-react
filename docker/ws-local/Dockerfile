@@ -4,8 +4,21 @@
 
 FROM node:10.13-alpine
 
+#SQLiteをインストール
 WORKDIR /
+RUN apk add --update \
+      alpine-sdk  \
+      tcl && \
+    wget \
+      -O sqlite.tar.gz \
+      https://www.sqlite.org/src/tarball/sqlite.tar.gz?r=release && \
+    tar xvfz sqlite.tar.gz && \
+    ./sqlite/configure --prefix=/usr && \
+    make && \
+    make install && \
+    sqlite3 --version
 
+#npmパッケージインストール
 WORKDIR /app
 
 EXPOSE 8080
