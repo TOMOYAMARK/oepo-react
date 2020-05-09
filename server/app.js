@@ -1,9 +1,58 @@
 
-//SQLiteをインポート。所定のディレクトリにdbファイルをつくります。
-var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('./database/app.db');
+//SQLiteをインポート。所定のディレクトリにdbファイルをつくる。
+const sqlite3 = require('sqlite3').verbose();
+const dbname = './database/app.db'
+var db = new sqlite3.Database(dbname);
+//!!sqlite標準の関数群が非同期処理(コールバック)なのでPromise化した関数でラッピングしたもの（動作未確認）!!//
+function get(sql, params) {
+	return new Promise((resolve, reject) => {
+		db.get(sql, params, (err, row) => {
+			if (err) reject(err);
+			resolve(row);
+		});
+	});
+}
 
-var http = require('http');
+function run(sql, params) {
+	return new Promise((resolve, reject) => {
+		db.run(sql, params, (err) => {
+			if (err) reject(err);
+			resolve();
+		});
+	});
+}
+//expressオブジェクトの生成とCORS設定
+const express = require("express");
+const app = express();
+// CORSを許可する
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+//httpリクエストをポート8080で待ち受け
+app.post('/api/fetch/theme', function(req, res) {
+  var data = {}
+
+  //データベースからランダムなお題を持ってきて返す。
+  db.serialize(function() {  
+    db.get("SELECT name FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
+      if(err){
+        //**エラーレスポンス**/
+      }
+      data = row
+      console.log("[THEME] responding:" + JSON.stringify(data))
+      res.json(data);
+    });
+  });
+  db.close();
+})
+var server = app.listen(8080, function(){
+  console.log("Node.js is listening to PORT:" + server.address().port);
+});
+//ここまでhttpレスポンス処理//
+
 const themes = ["itigo", "meronn", "mikann", "kyuuri"];
 
 let theme = "itigo";
@@ -14,13 +63,6 @@ let getRandom = n => { return Math.floor(Math.random() * n); };
 let updateTheme = () => theme = themes[getRandom(themes.length)];
 //let updateAnswers = () => answer = users[getRandom(users.length)];
 
-//--http--//(共存テスト用)
-var server = http.createServer(function(request, response) {
-    response.writeHead(200, { 'Content-Type': 'application/json' });
-    response.end("{'res':'data'}");
-})
-
-server.listen(8080);
 //--------//
 
 var ws = require('ws').Server;
