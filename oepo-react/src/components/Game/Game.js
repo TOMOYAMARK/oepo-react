@@ -1,4 +1,5 @@
 import React from 'react'
+import axios from '../../utils/API'
 import './Game.scss'
 import {ChatContainer} from '../Chat/ChatContainer'
 import {AppBar} from '../AppBar/AppBar'
@@ -64,8 +65,26 @@ class OekakiScreen extends React.Component{
     //!! constructorに接続の処理を書こうと思ったが、コンソールを見ると、処理が二回連続で実行されるため、 !!//
     //!! とりあえず違うライフサイクルフックに移動 !!//
 
+    //!!httpリクエストのテスト!!//
+    var form = {
+      test:"empty"
+    };
+    const json = JSON.stringify(form);
+
+    axios
+      .post( "/api/fetch/theme",json)
+      .then(res => {
+        console.log(res.data)
+      })
+      .catch(() => {
+        console.log("エラー");
+      });
+
+
   }
-  
+
+
+
   handleOnMessage(e){
     const json = e.data;
     const msg = JSON.parse(json);
