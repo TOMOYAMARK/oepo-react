@@ -2,7 +2,7 @@
 
 $panelHeight:calc(#{$gameHeight} * 0.3);
 
-$userContainerWidth:$gameWidth/8;
+$userPanelWidth:$gameWidth/8;
 
 .control-panel{
   clear: left;
@@ -10,10 +10,14 @@ $userContainerWidth:$gameWidth/8;
   width:$gameWidth;
   height:$panelHeight;
 
-  .user-container{
+  .users-container{
+    background-color: green;
+    width:calc(#{$userPanelWidth} * #{$roomCapacity});
+  }
+  .user-panel{
     background-color: red;
     border: 1px solid pink;
-    width:$userContainerWidth;
+    width:$userPanelWidth;
     height:$panelHeight;
   }
 }

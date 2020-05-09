@@ -2,9 +2,8 @@
 //SQLiteをインポート。所定のディレクトリにdbファイルをつくる。
 const sqlite3 = require('sqlite3').verbose();
 const dbname = './database/app.db'
-var db = new sqlite3.Database(dbname);
 //!!sqlite標準の関数群が非同期処理(コールバック)なのでPromise化した関数でラッピングしたもの（動作未確認）!!//
-function get(sql, params) {
+/*function get(sql, params) {
 	return new Promise((resolve, reject) => {
 		db.get(sql, params, (err, row) => {
 			if (err) reject(err);
@@ -21,6 +20,7 @@ function run(sql, params) {
 		});
 	});
 }
+*/
 //expressオブジェクトの生成とCORS設定
 const express = require("express");
 const app = express();
@@ -33,6 +33,7 @@ app.use(function(req, res, next) {
 
 //httpリクエストをポート8080で待ち受け
 app.post('/api/fetch/theme', function(req, res) {
+  var db = new sqlite3.Database(dbname);
   var data = {}
 
   //データベースからランダムなお題を持ってきて返す。

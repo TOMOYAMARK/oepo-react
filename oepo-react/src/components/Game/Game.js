@@ -137,7 +137,7 @@ class OekakiScreen extends React.Component{
         <CanvasContainer/> 
         <ChatContainer userName={this.props.userName}/>
 
-        <ControlPanel users={this.state.users}/>
+        <ControlPanel fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
       </div>
     )
   }

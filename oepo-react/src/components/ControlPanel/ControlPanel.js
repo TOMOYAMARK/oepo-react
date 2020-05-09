@@ -9,11 +9,16 @@ export class ControlPanel extends React.Component{
     return (
       <div className="control-panel">
         <Grid container>
-          {this.props.users.map((user,i) => (
-            <div key={i} className="user-container" >
-              {user}
-            </div>
-          ))}
+          <div className="users-container">
+            {this.props.users.map((user,i) => (
+              <div key={i} className="user-panel" >
+                {user}
+              </div>
+            ))}
+          </div>
+          <div className="controller">
+            <button onClick={() => this.props.fetchOekakiTheme()}>テーマを取得</button>
+          </div>
         </Grid>
       </div>
     )
