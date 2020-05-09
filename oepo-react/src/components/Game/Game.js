@@ -48,11 +48,16 @@ class LobbyScreen extends React.Component{
 class OekakiScreen extends React.Component{
   constructor(props){
     super(props)
+    this.gameStates = {
+      'IDLE':0,
+      'GAME':1,
+    }
 
     //!! 今はユーザ名をkeyとしているから、同名ユーザを扱えない。 → サーバ側で、唯一無二のid(wsのハッシュがよさそうだけど・・・)を与えるべきか !!//
     this.userMap = new Map([])
     this.state = {
-      users:[], //!!部屋に存在するユーザ!!//
+      users:[],                       //!!部屋に存在するユーザ!!//
+      gameState:this.gameStates.IDLE, //ゲームの状態
     }
   }
 
@@ -66,6 +71,18 @@ class OekakiScreen extends React.Component{
       .catch(() => {
         console.log("エラー");
       }); 
+  }
+
+  async requestGameStart(){
+    //ゲーム開始ボタンの押下をサーバに伝える
+    await axios
+    .post( "/game/change/state","{state:game}")
+    .then(res => {
+      console.log(res.data)
+    })
+    .catch(() => {
+      console.log("エラー");
+    }); 
   }
 
   componentDidMount(){ 
