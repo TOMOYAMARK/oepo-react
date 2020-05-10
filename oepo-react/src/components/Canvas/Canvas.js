@@ -127,6 +127,7 @@ export default class Canvas extends React.Component {
         imageQueue = [...imageQueue, imageData];
         // midCtxに描画
         imageQueue.map(image => {
+          if(image.hidden) return;
           containerCtx.putImageData(image.image, 0, 0);
           midCtx.drawImage(containerRef.current, 0, 0);
         });
@@ -134,8 +135,10 @@ export default class Canvas extends React.Component {
         // imageQueueを追加する
         imageQueue = [...imageQueue, imageData];
         // baseの描画
-        containerCtx.putImageData(imageQueue[0].image, 0, 0);
-        baseCtx.drawImage(containerRef.current, 0, 0);
+        if(!imageQueue[0].hidden){
+          containerCtx.putImageData(imageQueue[0].image, 0, 0);
+          baseCtx.drawImage(containerRef.current, 0, 0);
+        }
         // midの再描画
         this.clearCanvas(midCtx, 600, 500);
         const newImageQueue = imageQueue.filter(image => image !== imageQueue[0]);
