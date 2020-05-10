@@ -26,6 +26,14 @@ export default class Canvas extends React.Component {
     }
   }
 
+  get backable() {
+    return this.state.imageQueue.filter(img => img.id == this.props.mainUsrId && !img.hidden).length > 0;
+  }
+
+  get forwardable() {
+    return this.state.imageQueue.filter(img => img.id == this.props.mainUsrId && img.hidden).length > 0; 
+  }
+
   componentDidMount() {
     console.log('component did mount');
     // ソケット
@@ -348,18 +356,20 @@ export default class Canvas extends React.Component {
           onMouseDown={(e)=>this.handleMouseDown(e)}
           onMouseUp={(e)=>this.onMouseUp(e)}
         />
-        <button
-          style={{position: 'absolute', margin: "5px", left: "100px", top: "500px", zIndex:10}}
-          onClick={e => this.handleBack()}
-        >
-          戻る
-        </button>
+        {this.backable &&
+          <button
+            style={{position: 'absolute', margin: "5px", left: "100px", top: "500px", zIndex:10}}
+            onClick={e => this.handleBack()}
+          >
+            戻る
+          </button>}
+        {this.forwardable &&
         <button
          style={{position: 'absolute', margin: "5px", top: "500px", zIndex:10}}
          onClick={e => this.handleForward()}
         >
           進む
-        </button>
+        </button>}
       </div>
     )
   }
