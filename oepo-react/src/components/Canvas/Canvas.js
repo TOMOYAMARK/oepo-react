@@ -1,10 +1,7 @@
 import React from 'react';
 import './Canvas.scss';
 
-// 名前 ========> 通信テストするときはユニークに!
-const NAME = "jkniki";
-
-export class Canvas extends React.Component {
+export default class Canvas extends React.Component {
   constructor(props) {
     super(props);
     // 送信用のdraw処理
@@ -37,29 +34,8 @@ export class Canvas extends React.Component {
     this.webSocket.onopen = (e => this.handleOpen(e));
   }
 
-  componentDidUpdate() {
-    // const containerRef = this.state.containerRef;
-    // const midLayerRef = this.state.midLayerRef;
-    // const containerCtx = containerRef.current.getContext('2d');
-    // const midCtx = midLayerRef.current.getContext('2d');
-
-    // this.clearCanvas(midCtx, 600, 500);
-    // this.state.imageQueue.map(image => {
-    //   if(image.hidden) return;
-    //   containerCtx.putImageData(image.image, 0, 0);
-    //   midCtx.drawImage(containerRef.current, 0, 0);
-    // });
-  }
-
   handleOpen(e) {
     console.log('handle open');
-
-    const json = {
-      state: "join",
-      id: NAME,
-    }
-
-    this.webSocket.send(JSON.stringify(json));
   }
 
   handleMessage(e) {
@@ -73,9 +49,10 @@ export class Canvas extends React.Component {
     // ユーザーが 参加した とき
     if(usrAct.state == "join"){
       console.log('handle message : join');
+      console.log(usrAct);
       // usersの追加
-      const user = {id: usrAct.id, layer: null, position: null};
-      users = [...users, user];
+      const user = {id: usrAct.data.id, layer: null, position: null};
+      users = users.some(usr => usr.id == user.id) ? [...users] : [...users, user];
     }
     // ユーザーが 退室した とき
     if(usrAct.state == "leave"){
@@ -102,6 +79,7 @@ export class Canvas extends React.Component {
     // ペンが 移動した とき
     if(usrAct.state == "move"){
       console.log('handle message : move');
+      console.log(usrAct.id);
       // ユーザーを取得
       const user = users.find(user => user.id == usrAct.id);
       // context を取得
@@ -251,7 +229,7 @@ export class Canvas extends React.Component {
     // console.log('handle mosue down');
 
     const json = {
-      id: NAME,
+      id: this.props.mainUsrId,
       state: "down",
       position: {
         x: e.nativeEvent.offsetX,
@@ -270,7 +248,7 @@ export class Canvas extends React.Component {
     // console.log('handle mouse move');
 
     const json = {
-      id: NAME,
+      id: this.props.mainUsrId,
       state: "move",
       position: {
         x: e.nativeEvent.offsetX,
@@ -286,7 +264,7 @@ export class Canvas extends React.Component {
     // console.log('handle mouse up');
     
     const json = {
-      id: NAME,
+      id: this.props.mainUsrId,
       state: "up",
       position: {
         x: e.nativeEvent.offsetX,
@@ -294,7 +272,7 @@ export class Canvas extends React.Component {
       }
     }
     // console.log(json);
-    
+
     this.onMouseMove = () => {};
     this.onMouseUp = () => {};
 
@@ -309,7 +287,7 @@ export class Canvas extends React.Component {
     console.log('handle back');
 
     const json = {
-      id: NAME,
+      id: this.props.mainUsrId,
       state: "back",
     };
     this.webSocket.send(JSON.stringify(json));
@@ -319,7 +297,7 @@ export class Canvas extends React.Component {
     console.log('handle forward');
 
     const json = {
-      id: NAME,
+      id: this.props.mainUsrId,
       state: "forward",
     };
     this.webSocket.send(JSON.stringify(json));
@@ -331,7 +309,7 @@ export class Canvas extends React.Component {
         <canvas
           ref={layer.ref}
           key={idx}
-          style={{position: 'absolute', top: 0, left: 0, zIndex: -(idx+1)}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 8-idx}}
           width="600px"
           height="500px"
         />
@@ -343,26 +321,26 @@ export class Canvas extends React.Component {
         <canvas
           width='600px'
           height='500px'
-          style={{position: 'absolute', top: 0, left: 0, zIndex: -101, display: 'none'}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 10, display: 'none'}}
           ref={this.state.containerRef}
         />
         <canvas
           width='600px'
           height='500px'
-          style={{position: 'absolute', top: 0, left: 0, zIndex: -101}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 10}}
           ref={this.state.baseLayerRef}
         />
         <canvas
           width='600px'
           height='500px'
-          style={{position: 'absolute', top: 0, left: 0, zIndex: -100}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 9}}
           ref={this.state.midLayerRef}
         />
         {layers}
         <canvas
           width="600px"
           height="500px"
-          style={{position: 'absolute', top: 0, left: 0, zIndex: 0}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 11}}
           onMouseMove={(e)=>this.onMouseMove(e)}
           onMouseDown={(e)=>this.handleMouseDown(e)}
           onMouseUp={(e)=>this.onMouseUp(e)}
