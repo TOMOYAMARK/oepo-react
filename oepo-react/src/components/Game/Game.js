@@ -7,8 +7,15 @@ import {CanvasContainer} from '../Canvas/CanvasContainer'
 import {ControlPanel} from '../ControlPanel/ControlPanel'
 
 import FormControl from '@material-ui/core/FormControl';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import Input from '@material-ui/core/Input';
 import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import InputLabel from '@material-ui/core/InputLabel';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
+
 
 //
 //Lobby画面Container
@@ -19,23 +26,97 @@ class LobbyScreen extends React.Component{
     super(props)
 
     this.state = {
-      userName:"Anonymous",
+      userName:"",
+      password:"",
+      showPassword:false,
+      errMsgUsername:"",
+      errMsgPassword:"",
     }
 
   }
+
+  async verifyUser(username,password){
+    //パスワードのハッシュ値（SHA256）を生成、POST
+    const crypto = require('crypto') 
+    var passhash = crypto.createHash('sha256').update(password,'utf8').digest('hex')
+
+    var form = {
+      username:username,
+      passhash:passhash,
+    }
+
+    //ログインリクエスト
+    await axios
+      .post( "/api/user/login",form)
+      .then(res => {
+        if(res.data.msg === "missing-username"){
+          //ユーザ名が見つかりませんでした。
+          this.setState({errMsgUsername:"ユーザ名が見つかりませんでした。",errMsgPassword:""})
+        }else if(res.data.msg === "failed"){
+          //パスワードが違います。
+          this.setState({errMsgUsername:"",errMsgPassword:"パスワードが違います。"})
+        }else if(res.data.msg === "success"){
+          //認証成功
+          this.props.goToGame(this.state.userName)
+        }
+      })
+      .catch(() => {
+        //サーバーエラー
+        console.log("エラー");
+      }); 
+      
+    
+  }
+
+  renderErrorInput(id){
+    if(id === 'username')return (
+      <FormHelperText>{this.state.errMsgUsername}</FormHelperText>
+    )
+    else if(id === 'password') return(
+      <FormHelperText>{this.state.errMsgPassword}</FormHelperText>
+    )
+  }
+
   render(){
     return (
       <div className="lobby-container">
         <div className="inputs">
+          <div className="input-field">
           <p>This is LOBBY!</p>
-          <FormControl className="txt-field" variant="outlined" >
+          <FormControl className="txt-field" variant="outlined" error={this.state.errMsgUsername !== ""}>
+          <InputLabel htmlFor="standard-adornment-username">Username</InputLabel>
               <Input
-              style={{height:'50px'}}
+              style={{height:'50px',width:'300px'}}
               value={this.state.userName}
               onChange={event => this.setState({userName: event.target.value})}>
               </Input>
+              {this.renderErrorInput('username')}
             </FormControl>
-          <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.props.goToGame(this.state.userName)}>ゲームへ</Button>
+            </div>
+            <div className="input-field">
+          <FormControl variant="outlined" error={this.state.errMsgPassword !== ""}>
+          <InputLabel htmlFor="standard-adornment-password">Password</InputLabel>
+          <Input
+            id="password"
+            style={{height:'50px',width:'300px'}}
+            type={this.state.showPassword ? 'text' : 'password'}
+            value={this.state.password}
+            onChange={event => this.setState({password: event.target.value})}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={event => this.setState({showPassword: !this.state.showPassword})}
+                >
+                  {this.state.showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+          {this.renderErrorInput('password')}
+        </FormControl>
+        </div>
+          <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.verifyUser(this.state.userName,this.state.password)}>ゲームへ</Button>
         </div>
       </div>
     )

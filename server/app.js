@@ -23,7 +23,11 @@ function run(sql, params) {
 */
 //expressオブジェクトの生成とCORS設定
 const express = require("express");
+const bodyParser = require('body-parser');
+
 const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 // CORSを許可する
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -32,6 +36,44 @@ app.use(function(req, res, next) {
 });
 
 //httpリクエストをポート8080で待ち受け
+app.post('/api/user/login', (req,res) => {
+  const crypto = require('crypto')
+  var hash = req.body.passhash
+  var username = req.body.username
+  var db = new sqlite3.Database(dbname);
+  
+  //dbから該当ユーザID取得（ユーザ名はunique）
+  db.serialize(function() {
+    var stmt = db.prepare("SELECT id,hashkey FROM users WHERE name = ?")
+    stmt.get(username, function(err,row) {
+      if (err){
+        console.log("err")
+      }
+      //ユーザ名が存在しない
+      if(row === undefined) {
+        res.json({msg:"missing-username"})
+        stmt.finalize()
+        return
+      }
+      //取得したユーザIDをsaltとして検証
+      var ans = row.hashkey
+      var id = row.id
+
+      if(crypto.createHash('sha256').update(hash + id,'utf8').digest('hex') === ans){
+        //認証成功 ユーザ情報を返す
+        res.json({msg:"success",id:id})
+      }else{
+        //認証失敗
+        res.json({msg:"failed"})
+      }
+      stmt.finalize()
+    })
+
+  })
+  db.close()
+
+})
+
 app.post('/api/fetch/theme', function(req, res) {
   var db = new sqlite3.Database(dbname);
   var data = {}
@@ -52,7 +94,17 @@ app.post('/api/fetch/theme', function(req, res) {
 var server = app.listen(8080, function(){
   console.log("Node.js is listening to PORT:" + server.address().port);
 });
+
+app.post('/game/change/state',(req,res) => {
+  
+})
 //ここまでhttpレスポンス処理//
+
+
+// socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け 
+var connects = new Map([])
+// {userID(サーバ内で生成→userオブジェクトに注入):wsオブジェクト}でユーザのHTTPリクエストを判別
+var userIDMap = {}
 
 const themes = ["itigo", "meronn", "mikann", "kyuuri"];
 
@@ -140,8 +192,7 @@ wscanvas.on('connection', function(ws) {
 //---websocket game---//
 var wsgame = new ws({ port: 3002 });
 
-// socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け 
-var connects = new Map([]);
+
 
 wsgame.broadcast = function(data) {
     connects.forEach((value,client,map) =>  {
