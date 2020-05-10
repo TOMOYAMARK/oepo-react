@@ -56,8 +56,8 @@ class LobbyScreen extends React.Component{
           //パスワードが違います。
           this.setState({errMsgUsername:"",errMsgPassword:"パスワードが違います。"})
         }else if(res.data.msg === "success"){
-          //認証成功
-          this.props.goToGame(this.state.userName)
+          //認証成功 userオブジェクトを渡して状態変更
+          this.props.goToGame(res.data.user)
         }
       })
       .catch(() => {
@@ -183,20 +183,20 @@ class OekakiScreen extends React.Component{
     const msg = JSON.parse(json);
 
     var users = this.state.users.slice()
+    const user = msg.data
 
     if(msg.state === "player"){
-      //部屋に参加しているプレイヤーの情報を反映 → ハッシュテーブルじゃなくても、
-      //  本質的にはサーバ側で唯一のユーザIDを生成できれば良い。 いまは取り急ぎ
-      if(!this.userMap.has(msg.data.name)){
-        //もし同じ情報を持つユーザが部屋にいない（新規ユーザ）ならば、usersに追加
-        this.userMap.set(msg.data.name,msg.data)
-        users.push(msg.data.name)
+      //部屋に参加しているプレイヤーの情報を順次反映
+      if(!this.userMap.has(user.id)){
+        //新規ユーザならば、users(UI表示)に名前追加
+        this.userMap.set(user.id,user)
+        users.push(user.name)
       }
       this.setState({users:users})
     }
     else if(msg.state === "leave-room"){
-      var leavingUser = this.userMap.get(msg.data.name)
-      this.userMap.delete(msg.data.name)
+      var leavingUser = this.userMap.get(user.id)
+      this.userMap.delete(user.id)
 
       const newUsers = users.filter(u => u !== leavingUser.name);
 
@@ -217,8 +217,8 @@ class OekakiScreen extends React.Component{
     var msg = {
       state:"join-room",
       user:{
-        id:0, //!!テスト!!//
-        name:this.props.userName,
+        id:this.props.user.id,
+        name:this.props.user.name,
       }
     }
 
@@ -233,7 +233,7 @@ class OekakiScreen extends React.Component{
         <AppBar />
     
         <CanvasContainer/> 
-        <ChatContainer userName={this.props.userName}/>
+        <ChatContainer userName={this.props.user.name}/>
 
         <ControlPanel fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
       </div>
@@ -253,15 +253,15 @@ export class Game extends React.Component{
     this.state = {
       //最初はロビー(名前入力)から
       screenState:this.screenStates.LOBBY,
-      userName:"Anonymous",
+      user:undefined,
     }
   }
 
   //
   //ロビーからゲーム画面へ移行する。そのとき、ユーザ名を入力してもらう。
   //
-  goToGame(userName){
-    this.setState({userName:userName})
+  goToGame(user){
+    this.setState({user:user})
     this.setState({screenState:this.screenStates.GAME})
   }
 
@@ -276,7 +276,7 @@ export class Game extends React.Component{
     //ゲーム画面
     else if(this.state.screenState === this.screenStates.GAME){
       return (
-        <OekakiScreen userName = {this.state.userName}/>
+        <OekakiScreen user = {this.state.user}/>
       )
     }
 

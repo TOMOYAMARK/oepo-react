@@ -61,7 +61,10 @@ app.post('/api/user/login', (req,res) => {
 
       if(crypto.createHash('sha256').update(hash + id,'utf8').digest('hex') === ans){
         //認証成功 ユーザ情報を返す
-        res.json({msg:"success",id:id})
+        res.json({msg:"success",user:{
+          id:id,
+          name:username,
+        }})
       }else{
         //認証失敗
         res.json({msg:"failed"})
