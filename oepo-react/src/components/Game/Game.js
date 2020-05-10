@@ -1,4 +1,5 @@
 import React from 'react'
+import axios from '../../utils/API'
 import './Game.scss'
 import {ChatContainer} from '../Chat/ChatContainer'
 import {AppBar} from '../AppBar/AppBar'
@@ -8,6 +9,8 @@ import {ControlPanel} from '../ControlPanel/ControlPanel'
 import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
 import Button from '@material-ui/core/Button';
+
+const usrId = Date.now();
 
 //
 //Lobby画面Container
@@ -48,10 +51,23 @@ class OekakiScreen extends React.Component{
   constructor(props){
     super(props)
 
+    //!! 今はユーザ名をkeyとしているから、同名ユーザを扱えない。 → サーバ側で、唯一無二のid(wsのハッシュがよさそうだけど・・・)を与えるべきか !!//
     this.userMap = new Map([])
     this.state = {
       users:[], //!!部屋に存在するユーザ!!//
     }
+  }
+
+  async fetchOekakiTheme(){
+    //テーマ取得にもオプションがつくかもしれないのでpostです
+    await axios
+      .post( "/api/fetch/theme","{}")
+      .then(res => {
+        console.log(res.data)
+      })
+      .catch(() => {
+        console.log("エラー");
+      }); 
   }
 
   componentDidMount(){ 
@@ -62,9 +78,10 @@ class OekakiScreen extends React.Component{
 
     //!! constructorに接続の処理を書こうと思ったが、コンソールを見ると、処理が二回連続で実行されるため、 !!//
     //!! とりあえず違うライフサイクルフックに移動 !!//
-
   }
-  
+
+
+
   handleOnMessage(e){
     const json = e.data;
     const msg = JSON.parse(json);
@@ -104,7 +121,7 @@ class OekakiScreen extends React.Component{
     var msg = {
       state:"join-room",
       user:{
-        id:0, //!!テスト!!//
+        id:usrId, //!!テスト!!//
         name:this.props.userName,
       }
     }
@@ -115,14 +132,18 @@ class OekakiScreen extends React.Component{
   }
 
   render(){
+    console.log(this.state.users);
     return (
       <div className="game-container">
         <AppBar />
     
-        <CanvasContainer/> 
+        <CanvasContainer
+          mainUsrId={usrId}
+          users={this.state.users}
+        /> 
         <ChatContainer userName={this.props.userName}/>
 
-        <ControlPanel users={this.state.users}/>
+        <ControlPanel fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
       </div>
     )
   }

@@ -4,8 +4,19 @@ $canvasContainerWidth : $gameWidth * 0.7;
 $canvasContainerHeight : $gameHeight * 0.7;
 
 .canvas-container{
+  position: relative;
   float:left;
   background-color: grey;
   width: $canvasContainerWidth;
   height: $canvasContainerHeight;
+}
+
+.canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 600px;
+  height: 500px;
+  background-color: white;
 }
