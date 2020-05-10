@@ -14,7 +14,7 @@
   width:$gameWidth;
   position:relative;
   .inputs{
-    height:100px;
+    height:300px;
     width:500px;
     margin: auto;
     position:absolute; //🤔
@@ -22,5 +22,9 @@
     left:0;
     right: 0;
     bottom: 0;
+
+    .input-field{
+      margin: 20px 0;
+    }
   }
 }
