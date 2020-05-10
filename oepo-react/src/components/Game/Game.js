@@ -31,6 +31,29 @@ class LobbyScreen extends React.Component{
     }
 
   }
+
+  async verifyUser(username,password){
+    //パスワードのハッシュ値（SHA256）を生成、POST
+    const crypto = require('crypto') 
+    var passhash = crypto.createHash('sha256').update(password,'utf8').digest('hex')
+
+    var form = {
+      username:username,
+      passhash:passhash,
+    }
+
+    await axios
+      .post( "/api/user/login",form)
+      .then(res => {
+        console.log(res.data)
+      })
+      .catch(() => {
+        console.log("エラー");
+      }); 
+      
+    
+  }
+
   render(){
     return (
       <div className="lobby-container">
@@ -68,7 +91,7 @@ class LobbyScreen extends React.Component{
           />
         </FormControl>
         </div>
-          <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.props.goToGame(this.state.userName)}>ゲームへ</Button>
+          <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.verifyUser(this.state.userName,this.state.password)}>ゲームへ</Button>
         </div>
       </div>
     )
