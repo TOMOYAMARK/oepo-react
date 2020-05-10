@@ -10,6 +10,8 @@ import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
 import Button from '@material-ui/core/Button';
 
+const usrId = Date.now();
+
 //
 //Lobby画面Container
 //
@@ -119,7 +121,7 @@ class OekakiScreen extends React.Component{
     var msg = {
       state:"join-room",
       user:{
-        id:0, //!!テスト!!//
+        id:usrId, //!!テスト!!//
         name:this.props.userName,
       }
     }
@@ -130,11 +132,15 @@ class OekakiScreen extends React.Component{
   }
 
   render(){
+    console.log(this.state.users);
     return (
       <div className="game-container">
         <AppBar />
     
-        <CanvasContainer/> 
+        <CanvasContainer
+          mainUsrId={usrId}
+          users={this.state.users}
+        /> 
         <ChatContainer userName={this.props.userName}/>
 
         <ControlPanel fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
