@@ -168,7 +168,7 @@ class OekakiScreen extends React.Component{
 
   componentDidMount(){ 
     // websocketの準備
-    this.webSocket = new WebSocket("ws://34.85.36.109:3002");
+    this.webSocket = new WebSocket("ws://localhost:3002");
     this.webSocket.onopen = (e => this.handleOnOpen(e));
     this.webSocket.onmessage = (e => this.handleOnMessage(e));
 
@@ -227,6 +227,17 @@ class OekakiScreen extends React.Component{
     this.webSocket.send(json); // websocketに送信!
   }
 
+  startGame(){
+    var msg = {
+      state:"game-ready",
+      user_id:this.props.user.id
+    } 
+
+    console.log(msg)
+    const json = JSON.stringify(msg)
+    this.webSocket.send(json)
+  }
+
   render(){
     console.log(this.state.users);
     return (
@@ -239,7 +250,9 @@ class OekakiScreen extends React.Component{
         /> 
         <ChatContainer userName={this.props.user.name}/>
 
-        <ControlPanel fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
+        <ControlPanel 
+        startGame={() => this.startGame()}
+        fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
       </div>
     )
   }

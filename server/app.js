@@ -108,6 +108,16 @@ app.post('/game/change/state',(req,res) => {
 var connects = new Map([])
 // {userID(サーバ内で生成→userオブジェクトに注入):wsオブジェクト}でユーザのHTTPリクエストを判別
 var userIDMap = {}
+//{userID : ユーザの状態}
+var userStates = {}
+
+const states = {
+  //ゲーム内のユーザの状態enum
+  IDLE:0,
+  READY:1,
+  DRAW:2,
+  ANSWER:3,
+}
 
 // const themes = ["itigo", "meronn", "mikann", "kyuuri"];
 
@@ -213,12 +223,10 @@ wsgame.on('connection', function(ws) {
         console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
 
         if (data.state == "join-room") {
-          console.log("koin")
-
             //用意していた辞書にuser情報を付与
             connects.set(ws,data.user);
             userIDMap[data.user.id] = data.user;
-
+            userStates[data.user.id] = states.IDLE
             console.log("room:" + JSON.stringify(userIDMap))
 
             wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.user.name} が入室しました。` }));
@@ -233,10 +241,24 @@ wsgame.on('connection', function(ws) {
                     data: value,
                 }));
             })
-        } /*else if (data.state == "leave-room") {
-            const pos = users.findIndex(user => user.id == data.user.id);
-            users = users.splice(pos, 1);
-        }*/ else if (data.state == "select-game-mode") {
+        }
+        else if(data.state == "game-ready"){
+          //ユーザの準備完了
+          userStates[data.user_id] = states.READY
+          wsgame.broadcast(JSON.stringify({
+            state:"game-ready",
+            user_id:data.user_id
+          }))
+          //全員そろったらゲーム開始
+          if(Object.values(userStates).filter((state) => {
+            return state === states.READY
+          }).length === Object.values(userStates).length){
+            wsgame.broadcast(JSON.stringify({
+              state:"game-start",
+            }))
+          }
+        }
+        else if (data.state == "select-game-mode") {
             let sendData = JSON.stringify({ "state": "game-data", "data": data.data });
             let gameMode = "";
             if (data.data.gameMode == "egokoro") gameMode = "エゴコロクイズ";
@@ -251,6 +273,7 @@ wsgame.on('connection', function(ws) {
         var leavingUser = connects.get(ws)
         connects.delete(ws)
         delete userIDMap[leavingUser.id]
+        delete userStates[leavingUser.id]
         console.log("room:" + JSON.stringify(userIDMap))
         //退室しやユーザをブロードキャスト
         wsgame.broadcast(JSON.stringify({
