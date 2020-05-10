@@ -3,6 +3,6 @@
 import axios from "axios";
 
 export default axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "http://34.85.36.109",
   responseType: "json"
 });

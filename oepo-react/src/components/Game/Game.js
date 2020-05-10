@@ -7,10 +7,15 @@ import {CanvasContainer} from '../Canvas/CanvasContainer'
 import {ControlPanel} from '../ControlPanel/ControlPanel'
 
 import FormControl from '@material-ui/core/FormControl';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import Input from '@material-ui/core/Input';
 import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
+import InputLabel from '@material-ui/core/InputLabel';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
 
-const usrId = Date.now();
 
 //
 //Lobby画面Container
@@ -21,23 +26,97 @@ class LobbyScreen extends React.Component{
     super(props)
 
     this.state = {
-      userName:"Anonymous",
+      userName:"",
+      password:"",
+      showPassword:false,
+      errMsgUsername:"",
+      errMsgPassword:"",
     }
 
   }
+
+  async verifyUser(username,password){
+    //パスワードのハッシュ値（SHA256）を生成、POST
+    const crypto = require('crypto') 
+    var passhash = crypto.createHash('sha256').update(password,'utf8').digest('hex')
+
+    var form = {
+      username:username,
+      passhash:passhash,
+    }
+
+    //ログインリクエスト
+    await axios
+      .post( "/api/user/login",form)
+      .then(res => {
+        if(res.data.msg === "missing-username"){
+          //ユーザ名が見つかりませんでした。
+          this.setState({errMsgUsername:"ユーザ名が見つかりませんでした。",errMsgPassword:""})
+        }else if(res.data.msg === "failed"){
+          //パスワードが違います。
+          this.setState({errMsgUsername:"",errMsgPassword:"パスワードが違います。"})
+        }else if(res.data.msg === "success"){
+          //認証成功 userオブジェクトを渡して状態変更
+          this.props.goToGame(res.data.user)
+        }
+      })
+      .catch(() => {
+        //サーバーエラー
+        console.log("エラー");
+      }); 
+      
+    
+  }
+
+  renderErrorInput(id){
+    if(id === 'username')return (
+      <FormHelperText>{this.state.errMsgUsername}</FormHelperText>
+    )
+    else if(id === 'password') return(
+      <FormHelperText>{this.state.errMsgPassword}</FormHelperText>
+    )
+  }
+
   render(){
     return (
       <div className="lobby-container">
         <div className="inputs">
+          <div className="input-field">
           <p>This is LOBBY!</p>
-          <FormControl className="txt-field" variant="outlined" >
+          <FormControl className="txt-field" variant="outlined" error={this.state.errMsgUsername !== ""}>
+          <InputLabel htmlFor="standard-adornment-username">Username</InputLabel>
               <Input
-              style={{height:'50px'}}
+              style={{height:'50px',width:'300px'}}
               value={this.state.userName}
               onChange={event => this.setState({userName: event.target.value})}>
               </Input>
+              {this.renderErrorInput('username')}
             </FormControl>
-          <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.props.goToGame(this.state.userName)}>ゲームへ</Button>
+            </div>
+            <div className="input-field">
+          <FormControl variant="outlined" error={this.state.errMsgPassword !== ""}>
+          <InputLabel htmlFor="standard-adornment-password">Password</InputLabel>
+          <Input
+            id="password"
+            style={{height:'50px',width:'300px'}}
+            type={this.state.showPassword ? 'text' : 'password'}
+            value={this.state.password}
+            onChange={event => this.setState({password: event.target.value})}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={event => this.setState({showPassword: !this.state.showPassword})}
+                >
+                  {this.state.showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+          {this.renderErrorInput('password')}
+        </FormControl>
+        </div>
+          <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.verifyUser(this.state.userName,this.state.password)}>ゲームへ</Button>
         </div>
       </div>
     )
@@ -50,11 +129,16 @@ class LobbyScreen extends React.Component{
 class OekakiScreen extends React.Component{
   constructor(props){
     super(props)
+    this.gameStates = {
+      'IDLE':0,
+      'GAME':1,
+    }
 
     //!! 今はユーザ名をkeyとしているから、同名ユーザを扱えない。 → サーバ側で、唯一無二のid(wsのハッシュがよさそうだけど・・・)を与えるべきか !!//
     this.userMap = new Map([])
     this.state = {
-      users:[], //!!部屋に存在するユーザ!!//
+      users:[],                       //!!部屋に存在するユーザ!!//
+      gameState:this.gameStates.IDLE, //ゲームの状態
     }
   }
 
@@ -68,6 +152,18 @@ class OekakiScreen extends React.Component{
       .catch(() => {
         console.log("エラー");
       }); 
+  }
+
+  async requestGameStart(){
+    //ゲーム開始ボタンの押下をサーバに伝える
+    await axios
+    .post( "/game/change/state","{state:game}")
+    .then(res => {
+      console.log(res.data)
+    })
+    .catch(() => {
+      console.log("エラー");
+    }); 
   }
 
   componentDidMount(){ 
@@ -87,20 +183,20 @@ class OekakiScreen extends React.Component{
     const msg = JSON.parse(json);
 
     var users = this.state.users.slice()
+    const user = msg.data
 
     if(msg.state === "player"){
-      //部屋に参加しているプレイヤーの情報を反映 → ハッシュテーブルじゃなくても、
-      //  本質的にはサーバ側で唯一のユーザIDを生成できれば良い。 いまは取り急ぎ
-      if(!this.userMap.has(msg.data.name)){
-        //もし同じ情報を持つユーザが部屋にいない（新規ユーザ）ならば、usersに追加
-        this.userMap.set(msg.data.name,msg.data)
-        users.push(msg.data.name)
+      //部屋に参加しているプレイヤーの情報を順次反映
+      if(!this.userMap.has(user.id)){
+        //新規ユーザならば、users(UI表示)に名前追加
+        this.userMap.set(user.id,user)
+        users.push(user.name)
       }
       this.setState({users:users})
     }
     else if(msg.state === "leave-room"){
-      var leavingUser = this.userMap.get(msg.data.name)
-      this.userMap.delete(msg.data.name)
+      var leavingUser = this.userMap.get(user.id)
+      this.userMap.delete(user.id)
 
       const newUsers = users.filter(u => u !== leavingUser.name);
 
@@ -121,8 +217,8 @@ class OekakiScreen extends React.Component{
     var msg = {
       state:"join-room",
       user:{
-        id:usrId, //!!テスト!!//
-        name:this.props.userName,
+        id:this.props.user.id,
+        name:this.props.user.name,
       }
     }
 
@@ -138,10 +234,10 @@ class OekakiScreen extends React.Component{
         <AppBar />
     
         <CanvasContainer
-          mainUsrId={usrId}
+          mainUsrId={this.props.user.id}
           users={this.state.users}
         /> 
-        <ChatContainer userName={this.props.userName}/>
+        <ChatContainer userName={this.props.user.name}/>
 
         <ControlPanel fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
       </div>
@@ -161,15 +257,15 @@ export class Game extends React.Component{
     this.state = {
       //最初はロビー(名前入力)から
       screenState:this.screenStates.LOBBY,
-      userName:"Anonymous",
+      user:undefined,
     }
   }
 
   //
   //ロビーからゲーム画面へ移行する。そのとき、ユーザ名を入力してもらう。
   //
-  goToGame(userName){
-    this.setState({userName:userName})
+  goToGame(user){
+    this.setState({user:user})
     this.setState({screenState:this.screenStates.GAME})
   }
 
@@ -184,7 +280,7 @@ export class Game extends React.Component{
     //ゲーム画面
     else if(this.state.screenState === this.screenStates.GAME){
       return (
-        <OekakiScreen userName = {this.state.userName}/>
+        <OekakiScreen user = {this.state.user}/>
       )
     }
 
