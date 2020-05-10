@@ -170,6 +170,10 @@ wsgame.on('connection', function(ws) {
                     "state": "player",
                     "data": value
                 }))
+                wscanvas.broadcast(JSON.stringify({
+                    state: "join",
+                    data: value,
+                }));
             })
         } /*else if (data.state == "leave-room") {
             const pos = users.findIndex(user => user.id == data.user.id);
