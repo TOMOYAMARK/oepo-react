@@ -29,7 +29,7 @@ export default class Canvas extends React.Component {
   componentDidMount() {
     console.log('component did mount');
     // ソケット
-    this.webSocket = new WebSocket("ws://localhost:3001");
+    this.webSocket = new WebSocket("ws://34.85.36.109:3001");
     this.webSocket.onmessage = (e => this.handleMessage(e));
     this.webSocket.onopen = (e => this.handleOpen(e));
   }
