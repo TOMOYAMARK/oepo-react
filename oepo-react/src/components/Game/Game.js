@@ -49,7 +49,6 @@ class LobbyScreen extends React.Component{
     await axios
       .post( "/api/user/login",form)
       .then(res => {
-        console.log(res.data)
         if(res.data.msg === "missing-username"){
           //ユーザ名が見つかりませんでした。
           this.setState({errMsgUsername:"ユーザ名が見つかりませんでした。",errMsgPassword:""})
@@ -58,7 +57,7 @@ class LobbyScreen extends React.Component{
           this.setState({errMsgUsername:"",errMsgPassword:"パスワードが違います。"})
         }else if(res.data.msg === "success"){
           //認証成功
-
+          this.props.goToGame(this.state.userName)
         }
       })
       .catch(() => {
