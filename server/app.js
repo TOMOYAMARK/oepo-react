@@ -143,6 +143,11 @@ wss.broadcast = function(data) {
     console.log("send => " + data);
 };
 
+wss.systemShout = function(msg){
+  var data = JSON.stringify({ "status": "サーバー", "body": msg }) 
+  wss.broadcast(data)
+}
+
 wss.on('connection', function(ws) {
     ws.on('message', function(message) {
         var now = new Date();
@@ -229,7 +234,7 @@ wsgame.on('connection', function(ws) {
             userStates[data.user.id] = states.IDLE
             console.log("room:" + JSON.stringify(userIDMap))
 
-            wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.user.name} が入室しました。` }));
+            wss.systemShout(`${data.user.name} が入室しました。` )
             //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる 
             connects.forEach((value,key,map) => {
                 wsgame.broadcast(JSON.stringify({
