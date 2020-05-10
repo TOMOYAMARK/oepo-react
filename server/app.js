@@ -109,14 +109,14 @@ var connects = new Map([])
 // {userID(サーバ内で生成→userオブジェクトに注入):wsオブジェクト}でユーザのHTTPリクエストを判別
 var userIDMap = {}
 
-const themes = ["itigo", "meronn", "mikann", "kyuuri"];
+// const themes = ["itigo", "meronn", "mikann", "kyuuri"];
 
-let theme = "itigo";
-let answer = null;
-let isPlayingGame = true;
+// let theme = "itigo";
+// let answer = null;
+// let isPlayingGame = true;
 
-let getRandom = n => { return Math.floor(Math.random() * n); };
-let updateTheme = () => theme = themes[getRandom(themes.length)];
+// let getRandom = n => { return Math.floor(Math.random() * n); };
+// let updateTheme = () => theme = themes[getRandom(themes.length)];
 //let updateAnswers = () => answer = users[getRandom(users.length)];
 
 //--------//
@@ -213,9 +213,13 @@ wsgame.on('connection', function(ws) {
         console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
 
         if (data.state == "join-room") {
+          console.log("koin")
 
             //用意していた辞書にuser情報を付与
             connects.set(ws,data.user);
+            userIDMap[data.user.id] = data.user;
+
+            console.log("room:" + JSON.stringify(userIDMap))
 
             wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.user.name} が入室しました。` }));
             //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる 
@@ -242,6 +246,8 @@ wsgame.on('connection', function(ws) {
         //対応したwsをkeyにもつユーザ情報を削除
         var leavingUser = connects.get(ws)
         connects.delete(ws)
+        delete userIDMap[leavingUser.id]
+        console.log("room:" + JSON.stringify(userIDMap))
         //退室しやユーザをブロードキャスト
         wsgame.broadcast(JSON.stringify({
             "state": "leave-room",
