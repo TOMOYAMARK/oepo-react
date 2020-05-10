@@ -7,6 +7,7 @@ import {CanvasContainer} from '../Canvas/CanvasContainer'
 import {ControlPanel} from '../ControlPanel/ControlPanel'
 
 import FormControl from '@material-ui/core/FormControl';
+import FormHelperText from '@material-ui/core/FormHelperText';
 import Input from '@material-ui/core/Input';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -28,6 +29,8 @@ class LobbyScreen extends React.Component{
       userName:"",
       password:"",
       showPassword:false,
+      errMsgUsername:"",
+      errMsgPassword:"",
     }
 
   }
@@ -42,16 +45,37 @@ class LobbyScreen extends React.Component{
       passhash:passhash,
     }
 
+    //ログインリクエスト
     await axios
       .post( "/api/user/login",form)
       .then(res => {
         console.log(res.data)
+        if(res.data.msg === "missing-username"){
+          //ユーザ名が見つかりませんでした。
+          this.setState({errMsgUsername:"ユーザ名が見つかりませんでした。",errMsgPassword:""})
+        }else if(res.data.msg === "failed"){
+          //パスワードが違います。
+          this.setState({errMsgUsername:"",errMsgPassword:"パスワードが違います。"})
+        }else if(res.data.msg === "success"){
+          //認証成功
+
+        }
       })
       .catch(() => {
+        //サーバーエラー
         console.log("エラー");
       }); 
       
     
+  }
+
+  renderErrorInput(id){
+    if(id === 'username')return (
+      <FormHelperText>{this.state.errMsgUsername}</FormHelperText>
+    )
+    else if(id === 'password') return(
+      <FormHelperText>{this.state.errMsgPassword}</FormHelperText>
+    )
   }
 
   render(){
@@ -60,17 +84,18 @@ class LobbyScreen extends React.Component{
         <div className="inputs">
           <div className="input-field">
           <p>This is LOBBY!</p>
-          <FormControl className="txt-field" variant="outlined" >
+          <FormControl className="txt-field" variant="outlined" error={this.state.errMsgUsername !== ""}>
           <InputLabel htmlFor="standard-adornment-username">Username</InputLabel>
               <Input
               style={{height:'50px',width:'300px'}}
               value={this.state.userName}
               onChange={event => this.setState({userName: event.target.value})}>
               </Input>
+              {this.renderErrorInput('username')}
             </FormControl>
             </div>
             <div className="input-field">
-          <FormControl variant="outlined">
+          <FormControl variant="outlined" error={this.state.errMsgPassword !== ""}>
           <InputLabel htmlFor="standard-adornment-password">Password</InputLabel>
           <Input
             id="password"
@@ -89,6 +114,7 @@ class LobbyScreen extends React.Component{
               </InputAdornment>
             }
           />
+          {this.renderErrorInput('password')}
         </FormControl>
         </div>
           <Button style={{height:'50px'}} variant="contained" color="primary" onClick={() => this.verifyUser(this.state.userName,this.state.password)}>ゲームへ</Button>
