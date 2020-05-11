@@ -1,5 +1,9 @@
 
 const GameObject = require('./gameObject.js')
+const roomStates = {
+  IDLE:"idle",
+  GAME:"game",
+}
 
 //SQLiteをインポート。所定のディレクトリにdbファイルをつくる。
 const sqlite3 = require('sqlite3').verbose();
@@ -37,7 +41,7 @@ function fetchOekakiTheme(){
           //**エラーレスポンス**/
           reject(err)
         }
-        data = row
+        data = row//**本来ならば、略称や正解表示などの情報も含めてthemeオブジェクトとして扱う
         console.log("[THEME] responding:" + JSON.stringify(data))
       });
     });
@@ -123,6 +127,8 @@ var connects = new Map([])
 var userIDMap = {}
 //{userID : ユーザの状態}
 var userStates = {}
+//部屋の状態
+var roomState = roomStates.IDLE
 
 const states = {
   //ゲーム内のユーザの状態enum
@@ -147,7 +153,9 @@ wschat.broadcast = function(data) {
 };
 
 wschat.systemShout = function(msg){
-  var data = JSON.stringify({ "status": "サーバー", "body": msg }) 
+  var data = JSON.stringify({ "status":{
+    name:"サーバー"
+  }, "body": msg }) 
   wschat.broadcast(data)
 }
 
@@ -156,6 +164,26 @@ wschat.on('connection', function(ws) {
         var now = new Date();
         console.log(now.toLocaleString() + ' Received: %s', message);
         wschat.broadcast(message);
+
+        //ゲーム中でとみなす回答者のチャットは回答とみなす
+        if(roomState === roomStates.GAME){
+          let data = JSON.parse(message)
+          let user = data.status
+
+          if(game.isAnswerer(user.id)){
+            //回答者であれば、チャット本文を回答
+            if(game.answer(user,data.body)){
+              //正解
+              wschat.systemShout(`${user.name}が正解しました! (答え:${data.body})`)
+              wsgame.broadcast(JSON.stringify({
+                "state":"user-answered",
+                "params":{
+                  "user_id":user.id
+                }
+              }))
+            }
+          }
+        }
     });
 });
 //-----------------//
@@ -244,9 +272,10 @@ wsgame.on('connection', function(ws) {
               state:"game-start",
             }))
             wschat.systemShout("ゲームが開始しました。")
+            roomState = roomStates.GAME
 
             //ゲームの準備　ゲームオブジェクトの生成など
-            game = new GameObject.Game(userIDMap,connects,"test")
+            game = new GameObject.Game(userIDMap,connects,"test",wschat)
             game.generateNextTurn(await fetchOekakiTheme())
             game.startNextTurn()
           }
@@ -277,3 +306,4 @@ wsgame.on('connection', function(ws) {
       });
 });
 //-----------------//
+

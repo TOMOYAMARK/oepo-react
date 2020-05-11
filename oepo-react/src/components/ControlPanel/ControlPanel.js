@@ -12,7 +12,7 @@ export class ControlPanel extends React.Component{
           <div className="users-container">
             {this.props.users.map((user,i) => (
               <div key={i} className="user-panel" >
-                {user}
+                {user.name + " " + "(" + user.role + ")"}
               </div>
             ))}
           </div>

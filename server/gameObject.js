@@ -1,8 +1,8 @@
 
 const roles = {
-  IDLE:0,
-  ANSWER:1,
-  DRAW:2,
+  IDLE:"idle",
+  ANSWER:"answer",
+  DRAW:"draw",
 }
 
 class Turn {
@@ -14,7 +14,8 @@ class Turn {
 }
 
 class Game {
-  constructor(playerIDs,connects,mode){
+  constructor(playerIDs,connects,mode,wschat){
+    this.wschat = wschat              //システムメッセージ用ws
     this.playerIDs = playerIDs
     this.connects = connects
     this.mode = mode //!!for now
@@ -25,9 +26,14 @@ class Game {
     this.turnLength = 4               //!! for now
   }
 
+  isAnswerer(pid){
+    //渡されたidが回答者かどうか
+    return this.currentTurn.playerRole[pid] === roles.ANSWER
+  }
+
   answer(player,ans){
     //回答の照合
-    let isCorrect = ans === this.currentTurn.theme        //!!ただし、省略記法などの判定も今後必要
+    let isCorrect = (ans === this.currentTurn.theme.name)        //!!ただし、省略記法などの判定も今後必要。これは簡略化
     if(isCorrect) this.currentTurn.correctPlayer = player
     return  isCorrect
   }
@@ -38,6 +44,17 @@ class Game {
 
     this.currentTurn = this.nextTurn
     let roleMap = this.currentTurn.playerRole
+
+    //ターン情報をブロードキャスト
+    const msg = {
+      state:"begin-turn",
+      turn:{
+        num:this.track.length+1,          //何ターン目
+        role:this.currentTurn.playerRole  //各プレイヤーの役割
+      }
+    }
+
+    broadcast(this.connects,JSON.stringify(msg))
 
     //テーマを書き手にだけ伝えてみる。
     let connectWS =  Array.from(this.connects.keys())
@@ -53,6 +70,7 @@ class Game {
     //書き手にのみテーマを送信
     drawerWS.forEach((ws) => {
       ws.send(JSON.stringify({theme:this.currentTurn.theme}))
+      this.wschat.systemShout(`${this.connects.get(ws).name}さんが書き手です。`)
     })
 
   }
@@ -77,5 +95,14 @@ class Game {
     return roleMap
   }
 }
+
+//wsマップを元にbroadcast
+broadcast = function(connects,data) {
+  connects.forEach((value,client,map) =>  {
+      client.send(data);
+  });
+};
+
+
 
 exports.Game = Game

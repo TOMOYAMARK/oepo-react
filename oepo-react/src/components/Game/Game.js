@@ -134,11 +134,11 @@ class OekakiScreen extends React.Component{
       'GAME':1,
     }
 
-    //!! 今はユーザ名をkeyとしているから、同名ユーザを扱えない。 → サーバ側で、唯一無二のid(wsのハッシュがよさそうだけど・・・)を与えるべきか !!//
     this.userMap = new Map([])
     this.state = {
-      users:[],                       //!!部屋に存在するユーザ!!//
+      users:[],                       //ユーザオブジェクト(id,名前,役割,ステータス)の配列
       gameState:this.gameStates.IDLE, //ゲームの状態
+      turnNum:0,                      //何ターン目
     }
   }
 
@@ -190,7 +190,7 @@ class OekakiScreen extends React.Component{
       if(!this.userMap.has(user.id)){
         //新規ユーザならば、users(UI表示)に名前追加
         this.userMap.set(user.id,user)
-        users.push(user.name)
+        users.push(user)
       }
       this.setState({users:users})
     }
@@ -198,9 +198,25 @@ class OekakiScreen extends React.Component{
       var leavingUser = this.userMap.get(user.id)
       this.userMap.delete(user.id)
 
-      const newUsers = users.filter(u => u !== leavingUser.name);
+      const newUsers = users.filter(u => u !== leavingUser);
 
       this.setState({users:newUsers})
+    }
+    else if(msg.state === "game-start"){
+      //ゲーム開始
+      this.setState({gameState:this.gameStates.GAME})
+    }
+    else if(msg.state === "begin-turn"){
+      //ターンの開始。各ユーザの役割とターン情報を反映。
+      this.setState({turnNum:msg.turn.num})
+      let role = msg.turn.role
+
+      users = users.map(user => {
+        user.role = role[user.id]
+        return user
+      })
+
+      this.setState({users:users})
     }
 
     console.log(msg)
@@ -248,7 +264,7 @@ class OekakiScreen extends React.Component{
           mainUsrId={this.props.user.id}
           users={this.state.users}
         /> 
-        <ChatContainer userName={this.props.user.name}/>
+        <ChatContainer user={this.props.user}/>
 
         <ControlPanel 
         startGame={() => this.startGame()}
