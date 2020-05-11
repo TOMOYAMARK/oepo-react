@@ -202,6 +202,13 @@ class OekakiScreen extends React.Component{
 
       this.setState({users:newUsers})
     }
+    else if(msg.state === "game-ready"){
+      users.map(user => {
+        if(msg.user_id === user.id) user.role = 'ready' //!!role...?
+        return user
+      })
+      this.setState({users:users})
+    }
     else if(msg.state === "game-start"){
       //ゲーム開始
       this.setState({gameState:this.gameStates.GAME})
