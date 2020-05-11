@@ -12,12 +12,15 @@ export class ControlPanel extends React.Component{
           <div className="users-container">
             {this.props.users.map((user,i) => (
               <div key={i} className="user-panel" >
-                {user}
+                {user.name + " " + "(" + user.role + ")"}
               </div>
             ))}
           </div>
           <div className="controller">
             <button onClick={() => this.props.fetchOekakiTheme()}>テーマを取得</button>
+            <button onClick={() => this.props.startGame()}>準備完了</button>
+            <p>ターン:{this.props.turnNum}</p>
+            
           </div>
         </Grid>
       </div>

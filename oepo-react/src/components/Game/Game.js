@@ -134,11 +134,11 @@ class OekakiScreen extends React.Component{
       'GAME':1,
     }
 
-    //!! 今はユーザ名をkeyとしているから、同名ユーザを扱えない。 → サーバ側で、唯一無二のid(wsのハッシュがよさそうだけど・・・)を与えるべきか !!//
     this.userMap = new Map([])
     this.state = {
-      users:[],                       //!!部屋に存在するユーザ!!//
+      users:[],                       //ユーザオブジェクト(id,名前,役割,ステータス)の配列
       gameState:this.gameStates.IDLE, //ゲームの状態
+      turnNum:0,                      //何ターン目
     }
   }
 
@@ -190,7 +190,7 @@ class OekakiScreen extends React.Component{
       if(!this.userMap.has(user.id)){
         //新規ユーザならば、users(UI表示)に名前追加
         this.userMap.set(user.id,user)
-        users.push(user.name)
+        users.push(user)
       }
       this.setState({users:users})
     }
@@ -198,10 +198,58 @@ class OekakiScreen extends React.Component{
       var leavingUser = this.userMap.get(user.id)
       this.userMap.delete(user.id)
 
-      const newUsers = users.filter(u => u !== leavingUser.name);
+      const newUsers = users.filter(u => u !== leavingUser);
 
       this.setState({users:newUsers})
     }
+    else if(msg.state === "game-ready"){
+      users.map(user => {
+        if(msg.user_id === user.id) user.role = 'ready' //!!role...?
+        return user
+      })
+      this.setState({users:users})
+    }
+    else if(msg.state === "game-start"){
+      //ゲーム開始
+      this.setState({gameState:this.gameStates.GAME})
+    }
+    else if(msg.state === "begin-turn"){
+      //ターンの開始。各ユーザの役割とターン情報を反映。
+      this.setState({turnNum:msg.turn.num})
+      let role = msg.turn.role
+
+      users = users.map(user => {
+        user.role = role[user.id]
+        return user
+      })
+
+      this.setState({users:users})
+    }
+    else if(msg.state === "user-answered"){
+      //ユーザが正解しました。正解者のuidも一緒。
+
+      //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
+      var msgSending = {
+        state:"req-next",
+        user_id:this.props.user.id
+      } 
+      
+      console.log(msgSending)
+      const json = JSON.stringify(msgSending)
+      this.webSocket.send(json)
+    }
+    else if(msg.state === "game-finished"){
+      //**ゲーム終了。ゲームの履歴情報も一緒に送られてくる.**//
+      users = users.map(user => {
+        user.role = 'drawer'      //!!キャンバスにかけるようにdrawerをデフォルトにするか
+        return user
+      })
+
+      //状態初期化
+      this.setState({turnNum:0,gameState:this.gameStates.IDLE,users:users})
+
+    }
+    
 
     console.log(msg)
 
@@ -227,6 +275,17 @@ class OekakiScreen extends React.Component{
     this.webSocket.send(json); // websocketに送信!
   }
 
+  startGame(){
+    var msg = {
+      state:"game-ready",
+      user_id:this.props.user.id
+    } 
+
+    console.log(msg)
+    const json = JSON.stringify(msg)
+    this.webSocket.send(json)
+  }
+
   render(){
     console.log(this.state.users);
     return (
@@ -234,14 +293,17 @@ class OekakiScreen extends React.Component{
         <AppBar />
     
         <CanvasContainer
-          mainUsrId={usrId}
+          mainUsrId={this.props.user.id}
           users={this.state.users}
         /> 
         <ChatContainer userName={this.props.userName}/>
         <CanvasContainer/> 
         <ChatContainer userName={this.props.user.name}/>
 
-        <ControlPanel fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
+        <ControlPanel 
+        startGame={() => this.startGame()}
+        fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}
+        turnNum = {this.state.turnNum} />
       </div>
     )
   }

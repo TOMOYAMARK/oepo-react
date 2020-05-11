@@ -1,4 +1,11 @@
 
+const GameObject = require('./gameObject.js')
+const roomStates = {
+  IDLE:"idle",              //ゲーム開始待機状態
+  GAME:"game",              //ゲーム中
+  DURATION:"duration",      //アニメーションの待ち時間とか。端的に言ってGAME中の無意味な時間。
+}
+
 //SQLiteをインポート。所定のディレクトリにdbファイルをつくる。
 const sqlite3 = require('sqlite3').verbose();
 const dbname = './database/app.db'
@@ -21,6 +28,32 @@ function run(sql, params) {
 	});
 }
 */
+
+//テーマをランダムに返す(promise) awaitしてね⭐︎
+function fetchOekakiTheme(){
+  return new Promise ((resolve,reject) => {
+    var db = new sqlite3.Database(dbname);
+    var data = {}
+
+    //データベースからランダムなお題を持ってきて返す。
+    db.serialize(function() {  
+      db.get("SELECT name FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
+        if(err){
+          //**エラーレスポンス**/
+          reject(err)
+        }
+        data = row//**本来ならば、略称や正解表示などの情報も含めてthemeオブジェクトとして扱う
+        var now = new Date();
+        console.log(now.toLocaleString() + "[THEME]" + JSON.stringify(data))
+      });
+    });
+    db.close(() => {
+      //成功のコールバック
+      resolve(data) 
+    });  
+  })
+}
+
 //expressオブジェクトの生成とCORS設定
 const express = require("express");
 const bodyParser = require('body-parser');
@@ -77,24 +110,11 @@ app.post('/api/user/login', (req,res) => {
 
 })
 
-app.post('/api/fetch/theme', function(req, res) {
-  var db = new sqlite3.Database(dbname);
-  var data = {}
-
-  //データベースからランダムなお題を持ってきて返す。
-  db.serialize(function() {  
-    db.get("SELECT name FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
-      if(err){
-        //**エラーレスポンス**/
-      }
-      data = row
-      console.log("[THEME] responding:" + JSON.stringify(data))
-      res.json(data);
-    });
-  });
-  db.close();
+app.post('/api/fetch/theme', async function(req, res) {
+  res.json({theme:await fetchOekakiTheme()})
 })
-var server = app.listen(80, function(){
+
+var server = app.listen(8080, function(){
   console.log("Node.js is listening to PORT:" + server.address().port);
 });
 
@@ -103,63 +123,73 @@ app.post('/game/change/state',(req,res) => {
 })
 //ここまでhttpレスポンス処理//
 
-
 // socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け 
 var connects = new Map([])
 // {userID(サーバ内で生成→userオブジェクトに注入):wsオブジェクト}でユーザのHTTPリクエストを判別
 var userIDMap = {}
+//{userID : ユーザの状態}
+var userStates = {}
+//部屋の状態
+var roomState = roomStates.IDLE
 
-// const themes = ["itigo", "meronn", "mikann", "kyuuri"];
-
-// let theme = "itigo";
-// let answer = null;
-// let isPlayingGame = true;
-
-// let getRandom = n => { return Math.floor(Math.random() * n); };
-// let updateTheme = () => theme = themes[getRandom(themes.length)];
-//let updateAnswers = () => answer = users[getRandom(users.length)];
+const states = {
+  //ゲーム内のユーザの状態enum
+  IDLE:0,
+  READY:1,
+  DRAW:2,
+  ANSWER:3,
+}
 
 //--------//
 
 var ws = require('ws').Server;
 
 //---websocket chat---//
-var wss = new ws({ port: 3000 });
+var wschat = new ws({ port: 3000 });
 
-wss.broadcast = function(data) {
-    wss.clients.forEach(function(client) {
+wschat.broadcast = function(data) {
+    wschat.clients.forEach(function(client) {
         client.send(data);
     });
-    console.log("send => " + data);
+    console.log(now() + "[send]: => " + data);
 };
 
-wss.on('connection', function(ws) {
-    ws.on('message', function(message) {
+wschat.systemShout = function(msg){
+  var data = JSON.stringify({ "status":{
+    name:"サーバー"
+  }, "body": msg }) 
+  wschat.broadcast(data)
+}
+
+wschat.on('connection', function(ws) {
+    ws.on('message', async function(message) {
         var now = new Date();
         console.log(now.toLocaleString() + ' Received: %s', message);
-        wss.broadcast(message);
+        wschat.broadcast(message);
 
-        // ゲーム実行時の処理
-        // const data = JSON.parse(message);
-        // if (isPlayingGame) {
-        //     // 答えが合っているかどうか
-        //     if (data.text == theme) {
-        //         wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.name} が正解しました。` }));
-        //         wss.broadcast(JSON.stringify({ "name": "答え", "text": `${theme}` }));
+        //ゲーム中でとみなす回答者のチャットは回答とみなす
+        if(roomState === roomStates.GAME){
+          let data = JSON.parse(message)
+          let user = data.status
 
-        //         // 回答者とお題の更新
-        //         updateAnswers();
-        //         updateTheme();
+          if(game.isAnswerer(user.id)){
+            //回答者であれば、チャット本文を回答
+            if(game.answer(user,data.body)){
+              //正解。この直後回答は受け付けません.
+              roomState = roomStates.DURATION
+              //次ターンの (!!もしまだ続くのなら!!)
+              game.generateNextTurn(await fetchOekakiTheme())
+              wschat.systemShout(`${user.name}が正解しました! (答え:${data.body})`)
+              wsgame.broadcast(JSON.stringify({
+                "state":"user-answered",
+                "params":{
+                  "user_id":user.id
+                }
+              }))
 
-        //         // 回答者の交代とお題の送信
-        //         console.log(answer);
-        //         console.log(users);
-        //         const gameStateStr = JSON.stringify({ "theme": theme, "answer": answer });
-        //         const json = JSON.stringify({ state: "game-data", data: gameStateStr });
-        //         console.log(json);
-        //         wsgame.broadcast(json);
-        //     }
-        // }
+            }
+          }
+        }
     });
 });
 //-----------------//
@@ -174,7 +204,6 @@ wscanvas.broadcast = function(data) {
 };
 
 wscanvas.on('connection', function(ws) {
-    console.log("reached-connection wscanvas")
     ws.on('message', function(message) {
         var now = new Date();
         console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
@@ -195,33 +224,44 @@ wscanvas.on('connection', function(ws) {
 //---websocket game---//
 var wsgame = new ws({ port: 3002 });
 
-
-
 wsgame.broadcast = function(data) {
     connects.forEach((value,client,map) =>  {
         client.send(data);
     });
 };
 
+//現在時刻を返す
+now = function(){
+  return new Date().toLocaleString()
+}
+
+//** 部屋の状態をlogする関数 **//
+logRoomState = function(){
+  console.log(now() + "[ROOM]:" + JSON.stringify(userStates))
+}
+//****//
+
+
+
+//ゲームオブジェクト.ゲームの進行状態を管理
+let game = undefined
 
 wsgame.on('connection', function(ws) {
   connects.set(ws,undefined); // userMapにキーのみ装填 (user情報はまだ送信されていない。)
-    ws.on('message', function(message) {
+    ws.on('message', async function(message) {
         let data = JSON.parse(message);
         let now = new Date();
 
-        console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
+        console.log(now.toLocaleString() + '[Received]: %s', JSON.stringify(message));
 
         if (data.state == "join-room") {
-          console.log("koin")
-
             //用意していた辞書にuser情報を付与
-            connects.set(ws,data.user);
-            userIDMap[data.user.id] = data.user;
+            connects.set(ws,data.user)
+            userIDMap[data.user.id] = data.user
+            userStates[data.user.id] = states.IDLE
+            logRoomState()
 
-            console.log("room:" + JSON.stringify(userIDMap))
-
-            wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.user.name} が入室しました。` }));
+            wschat.systemShout(`${data.user.name} が入室しました。` )
             //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる 
             connects.forEach((value,key,map) => {
                 wsgame.broadcast(JSON.stringify({
@@ -233,15 +273,62 @@ wsgame.on('connection', function(ws) {
                     data: value,
                 }));
             })
-        } /*else if (data.state == "leave-room") {
-            const pos = users.findIndex(user => user.id == data.user.id);
-            users = users.splice(pos, 1);
-        }*/ else if (data.state == "select-game-mode") {
+        }
+        else if(data.state == "game-ready"){
+          //ユーザの (!!もしまだ続くのなら!!)完了
+          userStates[data.user_id] = states.READY
+          logRoomState()
+          wsgame.broadcast(JSON.stringify({
+            state:"game-ready",
+            user_id:data.user_id
+          }))
+          //全員そろったらゲーム開始
+          if(Object.values(userStates).filter((state) => {
+            return state === states.READY
+          }).length === Object.values(userStates).length){
+            //userStatesをすべてゲーム中に//
+            Object.keys(userStates).forEach(id => {
+              userStates[id] = states.GAME
+            }) 
+
+            wsgame.broadcast(JSON.stringify({
+              state:"game-start",
+            }))
+            wschat.systemShout("ゲームが開始しました。")
+            roomState = roomStates.GAME
+
+            //ゲームの準備　ゲームオブジェクトの生成など
+            game = new GameObject.Game(userIDMap,connects,"test",wschat)
+            game.generateNextTurn(await fetchOekakiTheme())
+            game.next()//!!genだけにとどめて、次のユーザーの準備を待つのも可（voteで）!!//
+            logRoomState()
+            //!!もしくはgen + nextのstartGame関数を用意する
+          }
+        }
+        else if(data.state == "req-next"){
+          let pid = data.user_id
+          if(game.vote(pid)){
+            //全員揃ったら次のターン/ゲーム終了
+            if(!game.next()){
+              //次がなかったらゲーム終了
+              game.terminate()
+              Object.keys(userStates).forEach(id => {
+                userStates[id] = states.IDLE
+              }) 
+              logRoomState()
+            }else{
+              //次のターン開始
+              roomState = roomStates.GAME
+              logRoomState()
+            }
+          }
+        }
+        else if (data.state == "select-game-mode") {
             let sendData = JSON.stringify({ "state": "game-data", "data": data.data });
             let gameMode = "";
             if (data.data.gameMode == "egokoro") gameMode = "エゴコロクイズ";
 
-            wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `ゲームモードが ${gameMode} に変更されました。` }));
+            wschat.broadcast(JSON.stringify({ "name": "サーバー", "text": `ゲームモードが ${gameMode} に変更されました。` }));
         }
     });
 
@@ -251,7 +338,8 @@ wsgame.on('connection', function(ws) {
         var leavingUser = connects.get(ws)
         connects.delete(ws)
         delete userIDMap[leavingUser.id]
-        console.log("room:" + JSON.stringify(userIDMap))
+        delete userStates[leavingUser.id]
+        logRoomState()
         //退室しやユーザをブロードキャスト
         wsgame.broadcast(JSON.stringify({
             "state": "leave-room",
@@ -261,3 +349,4 @@ wsgame.on('connection', function(ws) {
       });
 });
 //-----------------//
+

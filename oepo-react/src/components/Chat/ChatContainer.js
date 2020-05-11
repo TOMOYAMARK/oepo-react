@@ -24,7 +24,7 @@ class ChatDisplay extends React.Component{
     return (
       <div className="chat-disp">
         {this.props.msgQueue.map((item,i) => (
-          <p key={i}><span className="status-txt">{item.status}</span>:<span className="msg-txt">{item.body}</span> </p>
+          <p key={i}><span className="status-txt">{item.status.name}</span>:<span className="msg-txt">{item.body}</span> </p>
         ))}
       </div>
     )
@@ -37,7 +37,7 @@ export class ChatContainer extends React.Component{
     super(props);
 
     // websocketの準備
-    this.webSocket = new WebSocket("ws://34.85.36.109:3000");
+    this.webSocket = new WebSocket("ws://localhost:3000");
     this.webSocket.onmessage = (e => this.handleOnMessage(e));
 
     this.state = {
@@ -48,8 +48,6 @@ export class ChatContainer extends React.Component{
 
   handleSubmit(msg){
     // メッセージ本文と送信主のステータスをサーバーに送信
-
-    console.log(msg)
     const json = JSON.stringify(msg);
     this.webSocket.send(json); // websocketに送信!
   }
@@ -58,8 +56,10 @@ export class ChatContainer extends React.Component{
     //メッセージ本文と送信主のステータスをサーバーから受け取り
     //メッセージキューに追加
 
+
     const json = e.data;
     const msg = JSON.parse(json);
+    console.log(msg)
 
     var msgQueue = this.state.msgQueue.slice();
     msgQueue.push(msg);
@@ -85,7 +85,7 @@ export class ChatContainer extends React.Component{
           <button className="submit-btn"
             style={{width:'50px'}} 
             onClick={ () => this.handleSubmit({
-              status:this.props.userName,
+              status:this.props.user,
               body:this.state.msgValue
             })}
           >
