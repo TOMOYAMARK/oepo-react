@@ -137,25 +137,25 @@ const states = {
 var ws = require('ws').Server;
 
 //---websocket chat---//
-var chatws = new ws({ port: 3000 });
+var wschat = new ws({ port: 3000 });
 
-chatws.broadcast = function(data) {
-    chatws.clients.forEach(function(client) {
+wschat.broadcast = function(data) {
+    wschat.clients.forEach(function(client) {
         client.send(data);
     });
     console.log("send => " + data);
 };
 
-chatws.systemShout = function(msg){
+wschat.systemShout = function(msg){
   var data = JSON.stringify({ "status": "サーバー", "body": msg }) 
-  chatws.broadcast(data)
+  wschat.broadcast(data)
 }
 
-chatws.on('connection', function(ws) {
+wschat.on('connection', function(ws) {
     ws.on('message', function(message) {
         var now = new Date();
         console.log(now.toLocaleString() + ' Received: %s', message);
-        chatws.broadcast(message);
+        wschat.broadcast(message);
     });
 });
 //-----------------//
@@ -216,7 +216,7 @@ wsgame.on('connection', function(ws) {
             userStates[data.user.id] = states.IDLE
             console.log("room:" + JSON.stringify(userIDMap))
 
-            chatws.systemShout(`${data.user.name} が入室しました。` )
+            wschat.systemShout(`${data.user.name} が入室しました。` )
             //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる 
             connects.forEach((value,key,map) => {
                 wsgame.broadcast(JSON.stringify({
@@ -243,7 +243,7 @@ wsgame.on('connection', function(ws) {
             wsgame.broadcast(JSON.stringify({
               state:"game-start",
             }))
-            chatws.systemShout("ゲームが開始しました。")
+            wschat.systemShout("ゲームが開始しました。")
 
             //ゲームの準備　ゲームオブジェクトの生成など
             game = new GameObject.Game(userIDMap,connects,"test")
@@ -256,7 +256,7 @@ wsgame.on('connection', function(ws) {
             let gameMode = "";
             if (data.data.gameMode == "egokoro") gameMode = "エゴコロクイズ";
 
-            chatws.broadcast(JSON.stringify({ "name": "サーバー", "text": `ゲームモードが ${gameMode} に変更されました。` }));
+            wschat.broadcast(JSON.stringify({ "name": "サーバー", "text": `ゲームモードが ${gameMode} に変更されました。` }));
         }
     });
 
