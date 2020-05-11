@@ -42,8 +42,6 @@ class Game {
     //テーマを書き手にだけ伝えてみる。
     let connectWS =  Array.from(this.connects.keys())
 
-    console.log(JSON.stringify(roleMap))
-
     let drawerWS = connectWS.filter((ws)=>{
       //送信すべきwsオブジェクトがほしい
       console.log(JSON.stringify(this.connects.get(ws)))
@@ -51,7 +49,6 @@ class Game {
       if(roleMap[userid] === roles.DRAW) return true
       else return false
     })
-
 
     //書き手にのみテーマを送信
     drawerWS.forEach((ws) => {
@@ -71,7 +68,7 @@ class Game {
     let roleMap = {}
     let count = 0
 
-    //!! 最初の人を書き手にしてみる !!//
+    //!! ホストの人を書き手にしてみる !!//
     for (let pid in this.playerIDs){
       roleMap[pid] = roles.ANSWER                 //!! for now
       if(count === 0) roleMap[pid] = roles.DRAW   //!! for now
