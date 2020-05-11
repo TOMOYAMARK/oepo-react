@@ -1,4 +1,6 @@
 
+const GameObject = require('./gameObject.js')
+
 //SQLiteをインポート。所定のディレクトリにdbファイルをつくる。
 const sqlite3 = require('sqlite3').verbose();
 const dbname = './database/app.db'
@@ -21,6 +23,31 @@ function run(sql, params) {
 	});
 }
 */
+
+//テーマをランダムに返す(promise) awaitしてね⭐︎
+function fetchOekakiTheme(){
+  return new Promise ((resolve,reject) => {
+    var db = new sqlite3.Database(dbname);
+    var data = {}
+
+    //データベースからランダムなお題を持ってきて返す。
+    db.serialize(function() {  
+      db.get("SELECT name FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
+        if(err){
+          //**エラーレスポンス**/
+          reject(err)
+        }
+        data = row
+        console.log("[THEME] responding:" + JSON.stringify(data))
+      });
+    });
+    db.close(() => {
+      //成功のコールバック
+      resolve(data) 
+    });  
+  })
+}
+
 //expressオブジェクトの生成とCORS設定
 const express = require("express");
 const bodyParser = require('body-parser');
@@ -77,23 +104,10 @@ app.post('/api/user/login', (req,res) => {
 
 })
 
-app.post('/api/fetch/theme', function(req, res) {
-  var db = new sqlite3.Database(dbname);
-  var data = {}
-
-  //データベースからランダムなお題を持ってきて返す。
-  db.serialize(function() {  
-    db.get("SELECT name FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
-      if(err){
-        //**エラーレスポンス**/
-      }
-      data = row
-      console.log("[THEME] responding:" + JSON.stringify(data))
-      res.json(data);
-    });
-  });
-  db.close();
+app.post('/api/fetch/theme', async function(req, res) {
+  res.json({theme:await fetchOekakiTheme()})
 })
+
 var server = app.listen(8080, function(){
   console.log("Node.js is listening to PORT:" + server.address().port);
 });
@@ -102,7 +116,6 @@ app.post('/game/change/state',(req,res) => {
   
 })
 //ここまでhttpレスポンス処理//
-
 
 // socketオブジェクト : userオブジェクト のハッシュテーブルでソケットとユーザを紐付け 
 var connects = new Map([])
@@ -118,16 +131,6 @@ const states = {
   DRAW:2,
   ANSWER:3,
 }
-
-// const themes = ["itigo", "meronn", "mikann", "kyuuri"];
-
-// let theme = "itigo";
-// let answer = null;
-// let isPlayingGame = true;
-
-// let getRandom = n => { return Math.floor(Math.random() * n); };
-// let updateTheme = () => theme = themes[getRandom(themes.length)];
-//let updateAnswers = () => answer = users[getRandom(users.length)];
 
 //--------//
 
@@ -153,28 +156,6 @@ wss.on('connection', function(ws) {
         var now = new Date();
         console.log(now.toLocaleString() + ' Received: %s', message);
         wss.broadcast(message);
-
-        // ゲーム実行時の処理
-        // const data = JSON.parse(message);
-        // if (isPlayingGame) {
-        //     // 答えが合っているかどうか
-        //     if (data.text == theme) {
-        //         wss.broadcast(JSON.stringify({ "name": "サーバー", "text": `${data.name} が正解しました。` }));
-        //         wss.broadcast(JSON.stringify({ "name": "答え", "text": `${theme}` }));
-
-        //         // 回答者とお題の更新
-        //         updateAnswers();
-        //         updateTheme();
-
-        //         // 回答者の交代とお題の送信
-        //         console.log(answer);
-        //         console.log(users);
-        //         const gameStateStr = JSON.stringify({ "theme": theme, "answer": answer });
-        //         const json = JSON.stringify({ state: "game-data", data: gameStateStr });
-        //         console.log(json);
-        //         wsgame.broadcast(json);
-        //     }
-        // }
     });
 });
 //-----------------//
@@ -210,8 +191,6 @@ wscanvas.on('connection', function(ws) {
 //---websocket game---//
 var wsgame = new ws({ port: 3002 });
 
-
-
 wsgame.broadcast = function(data) {
     connects.forEach((value,client,map) =>  {
         client.send(data);
@@ -219,9 +198,12 @@ wsgame.broadcast = function(data) {
 };
 
 
+//ゲームオブジェクト.ゲームの進行状態を管理
+let game = undefined
+
 wsgame.on('connection', function(ws) {
   connects.set(ws,undefined); // userMapにキーのみ装填 (user情報はまだ送信されていない。)
-    ws.on('message', function(message) {
+    ws.on('message', async function(message) {
         let data = JSON.parse(message);
         let now = new Date();
 
@@ -261,6 +243,12 @@ wsgame.on('connection', function(ws) {
             wsgame.broadcast(JSON.stringify({
               state:"game-start",
             }))
+            wss.systemShout("ゲームが開始しました。")
+
+            //ゲームの準備　ゲームオブジェクトの生成など
+            game = new GameObject.Game(userIDMap,connects,"test")
+            game.generateNextTurn(await fetchOekakiTheme())
+            game.startNextTurn()
           }
         }
         else if (data.state == "select-game-mode") {
