@@ -14,6 +14,12 @@ class Turn {
 }
 
 class Game {
+
+  //**ゲームモードに応じたオブジェクトを生成する静的関数
+  static generateGame(playerIDs,connects,mode,wschat){
+    //**モードに応じたターン回しを記述**//
+  }
+
   constructor(playerIDs,connects,mode,wschat){
     this.wschat = wschat              //システムメッセージ用ws
     this.playerIDs = playerIDs
