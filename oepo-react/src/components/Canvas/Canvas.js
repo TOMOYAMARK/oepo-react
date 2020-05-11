@@ -34,6 +34,18 @@ export default class Canvas extends React.Component {
     this.webSocket.onopen = (e => this.handleOpen(e));
   }
 
+  drawing(ref, start, end, palette){
+    const ctx = ref.current.getContext('2d');
+    ctx.lineWidth = palette.weight;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = palette.state == "erase" ? "white" : palette.color;
+    ctx.globalAlpha = palette.opacity;
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
+  }
+
   handleOpen(e) {
     console.log('handle open');
   }
@@ -82,15 +94,8 @@ export default class Canvas extends React.Component {
       console.log(usrAct.id);
       // ユーザーを取得
       const user = users.find(user => user.id == usrAct.id);
-      // context を取得
-      const ctx = user.layer.ref.current.getContext('2d');
-      // ドローする
-      ctx.lineWidth = 10;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(user.position.x, user.position.y);
-      ctx.lineTo(usrAct.position.x, usrAct.position.y);
-      ctx.stroke();
+      // user の ref へ描画
+      this.drawing(user.layer.ref, user.position, usrAct.position, usrAct.palette);
       // 新しいuserの状態を定義
       const newUser = {id: usrAct.id, layer: user.layer, position: usrAct.position};
       // users の更新
@@ -102,17 +107,14 @@ export default class Canvas extends React.Component {
       console.log('handle message : up');
       // ユーザーを取得
       const user = users.find(user => user.id == usrAct.id);
-      // context, mid context, base context を取得
-      const ctx = user.layer.ref.current.getContext('2d');
+      // mid context, base context を取得
       const midCtx = midLayerRef.current.getContext('2d');
       const baseCtx = baseLayerRef.current.getContext('2d');
       const containerCtx = containerRef.current.getContext('2d');
       // ドローする
-      ctx.beginPath();
-      ctx.moveTo(user.position.x, user.position.y);
-      ctx.lineTo(usrAct.position.x, usrAct.position.y);
-      ctx.stroke();
+      this.drawing(user.layer.ref, user.position, usrAct.position, usrAct.palette);
       // 画像を取得する
+      const ctx = user.layer.ref.current.getContext('2d');
       const image = ctx.getImageData(0, 0, 600, 500);
       const imageData = {
         id: user.id,
@@ -234,7 +236,8 @@ export default class Canvas extends React.Component {
       position: {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
-      }
+      },
+      palette: this.props.palette,
     }
 
     this.onMouseMove = this.handleMouseMove;
@@ -253,7 +256,8 @@ export default class Canvas extends React.Component {
       position: {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
-      }
+      },
+      palette: this.props.palette,
     }
 
     // console.log(json);
@@ -269,7 +273,8 @@ export default class Canvas extends React.Component {
       position: {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
-      }
+      },
+      palette: this.props.palette,
     }
     // console.log(json);
 
