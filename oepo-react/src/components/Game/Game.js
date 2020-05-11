@@ -218,6 +218,31 @@ class OekakiScreen extends React.Component{
 
       this.setState({users:users})
     }
+    else if(msg.state === "user-answered"){
+      //ユーザが正解しました。正解者のuidも一緒。
+
+      //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
+      var msgSending = {
+        state:"req-next",
+        user_id:this.props.user.id
+      } 
+      
+      console.log(msgSending)
+      const json = JSON.stringify(msgSending)
+      this.webSocket.send(json)
+    }
+    else if(msg.state === "game-finished"){
+      //**ゲーム終了。ゲームの履歴情報も一緒に送られてくる.**//
+      users = users.map(user => {
+        user.role = 'drawer'      //!!キャンバスにかけるようにdrawerをデフォルトにするか
+        return user
+      })
+
+      //状態初期化
+      this.setState({turnNum:0,gameState:this.gameStates.IDLE,users:users})
+
+    }
+    
 
     console.log(msg)
 
@@ -268,7 +293,8 @@ class OekakiScreen extends React.Component{
 
         <ControlPanel 
         startGame={() => this.startGame()}
-        fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}/>
+        fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}
+        turnNum = {this.state.turnNum} />
       </div>
     )
   }

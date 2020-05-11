@@ -1,8 +1,9 @@
 
 const GameObject = require('./gameObject.js')
 const roomStates = {
-  IDLE:"idle",
-  GAME:"game",
+  IDLE:"idle",              //ゲーム開始待機状態
+  GAME:"game",              //ゲーム中
+  DURATION:"duration",      //アニメーションの待ち時間とか。端的に言ってGAME中の無意味な時間。
 }
 
 //SQLiteをインポート。所定のディレクトリにdbファイルをつくる。
@@ -160,7 +161,7 @@ wschat.systemShout = function(msg){
 }
 
 wschat.on('connection', function(ws) {
-    ws.on('message', function(message) {
+    ws.on('message', async function(message) {
         var now = new Date();
         console.log(now.toLocaleString() + ' Received: %s', message);
         wschat.broadcast(message);
@@ -173,7 +174,10 @@ wschat.on('connection', function(ws) {
           if(game.isAnswerer(user.id)){
             //回答者であれば、チャット本文を回答
             if(game.answer(user,data.body)){
-              //正解
+              //正解。この直後回答は受け付けません.
+              roomState = roomStates.DURATION
+              //次ターンの (!!もしまだ続くのなら!!)
+              game.generateNextTurn(await fetchOekakiTheme())
               wschat.systemShout(`${user.name}が正解しました! (答え:${data.body})`)
               wsgame.broadcast(JSON.stringify({
                 "state":"user-answered",
@@ -181,6 +185,7 @@ wschat.on('connection', function(ws) {
                   "user_id":user.id
                 }
               }))
+
             }
           }
         }
@@ -258,7 +263,7 @@ wsgame.on('connection', function(ws) {
             })
         }
         else if(data.state == "game-ready"){
-          //ユーザの準備完了
+          //ユーザの (!!もしまだ続くのなら!!)完了
           userStates[data.user_id] = states.READY
           wsgame.broadcast(JSON.stringify({
             state:"game-ready",
@@ -268,6 +273,7 @@ wsgame.on('connection', function(ws) {
           if(Object.values(userStates).filter((state) => {
             return state === states.READY
           }).length === Object.values(userStates).length){
+            //!!userStatesをすべてゲーム中に!!//
             wsgame.broadcast(JSON.stringify({
               state:"game-start",
             }))
@@ -277,7 +283,24 @@ wsgame.on('connection', function(ws) {
             //ゲームの準備　ゲームオブジェクトの生成など
             game = new GameObject.Game(userIDMap,connects,"test",wschat)
             game.generateNextTurn(await fetchOekakiTheme())
-            game.startNextTurn()
+            game.next()//!!genだけにとどめて、次のユーザーの準備を待つのも可（voteで）!!//
+            //!!もしくはgen + nextのstartGame関数を用意する
+          }
+        }
+        else if(data.state == "req-next"){
+          let pid = data.user_id
+          if(game.vote(pid)){
+            //全員揃ったら次のターン/ゲーム終了
+            if(!game.next()){
+              //次がなかったらゲーム終了
+              game.terminate()
+              userStates = userStates.map(() => {
+                return states.IDLE
+              })
+            }else{
+              //次のターン開始
+              roomState = roomStates.GAME
+            }
           }
         }
         else if (data.state == "select-game-mode") {

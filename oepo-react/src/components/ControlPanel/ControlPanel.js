@@ -19,6 +19,7 @@ export class ControlPanel extends React.Component{
           <div className="controller">
             <button onClick={() => this.props.fetchOekakiTheme()}>テーマを取得</button>
             <button onClick={() => this.props.startGame()}>準備完了</button>
+            <p>ターン:{this.props.turnNum}</p>
             
           </div>
         </Grid>

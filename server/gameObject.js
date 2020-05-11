@@ -27,8 +27,8 @@ class Game {
     this.mode = mode //!!for now
 
     this.track = []                   //ターンの履歴→turnの配列
-    this.waiting = []                 //準備ができているユーザ
-    this.currentTurn = undefined      //現在のターン情報
+    this.waiting = {}                 //準備ができているユーザ
+    this.currentTurn = null           //現在のターン情報
     this.turnLength = 4               //!! for now
   }
 
@@ -44,9 +44,22 @@ class Game {
     return  isCorrect
   }
 
-  startNextTurn(){
+  vote(pid){
+    //DURATION->GAME (次のターン開始まで)の切り替え要請とかに使う。
+    this.waiting[pid] = null
+    console.log(JSON.stringify(this.waiting))
+    console.log(JSON.stringify(this.playerIDs))
+    if(Object.keys(this.waiting).length === Object.keys(this.playerIDs).length){
+      this.waiting = {}
+      return true           //OK!始まるよ!
+    }
+    return false
+  }
+
+  next(){
     //ユーザ全員の準備が完了次第、ターンオブジェクトの内容をbroadcastしてターンを開始する。
-    if(this.track.length > 0) this.track.push(this.currentTurn)
+    if(this.currentTurn !== null) this.track.push(this.currentTurn)
+    if(this.track.length === this.turnLength) return false//最後のターンだったよ
 
     this.currentTurn = this.nextTurn
     let roleMap = this.currentTurn.playerRole
@@ -79,6 +92,16 @@ class Game {
       this.wschat.systemShout(`${this.connects.get(ws).name}さんが書き手です。`)
     })
 
+    return true
+
+  }
+
+  terminate(){
+    //ゲーム終了〜。ゲームの履歴情報も一緒に送ることになるかも
+    broadcast(this.connects,JSON.stringify({
+      "state":"game-finished",
+      "track":this.track
+    }))
   }
 
   generateNextTurn(theme){
@@ -92,11 +115,11 @@ class Game {
     let roleMap = {}
     let count = 0
 
-    //!! ホストの人を書き手にしてみる !!//
+    //!! 一人ランダムに書き手にしてみる。それ以外は回答者 !!//
+    let drawerIndex = require('./utils/gens.js').getRandomInt(Object.keys(this.playerIDs).length)
     for (let pid in this.playerIDs){
       roleMap[pid] = roles.ANSWER                 //!! for now
-      if(count === 0) roleMap[pid] = roles.DRAW   //!! for now
-      count++
+      if(count++ === drawerIndex) roleMap[pid] = roles.DRAW   //!! for now
     }
     return roleMap
   }

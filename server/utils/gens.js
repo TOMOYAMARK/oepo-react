@@ -14,4 +14,5 @@ function generateUserID(){
   return ret
 }
 
-exports.generateUserID = generateUserID()
+exports.generateUserID = generateUserID
+exports.getRandomInt = getRandomInt
