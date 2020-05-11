@@ -43,7 +43,8 @@ function fetchOekakiTheme(){
           reject(err)
         }
         data = row//**本来ならば、略称や正解表示などの情報も含めてthemeオブジェクトとして扱う
-        console.log("[THEME] responding:" + JSON.stringify(data))
+        var now = new Date();
+        console.log(now.toLocaleString() + "[THEME]" + JSON.stringify(data))
       });
     });
     db.close(() => {
@@ -150,7 +151,7 @@ wschat.broadcast = function(data) {
     wschat.clients.forEach(function(client) {
         client.send(data);
     });
-    console.log("send => " + data);
+    console.log(now() + "[send]: => " + data);
 };
 
 wschat.systemShout = function(msg){
@@ -203,7 +204,6 @@ wscanvas.broadcast = function(data) {
 };
 
 wscanvas.on('connection', function(ws) {
-    console.log("reached-connection wscanvas")
     ws.on('message', function(message) {
         var now = new Date();
         console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
@@ -230,6 +230,18 @@ wsgame.broadcast = function(data) {
     });
 };
 
+//現在時刻を返す
+now = function(){
+  return new Date().toLocaleString()
+}
+
+//** 部屋の状態をlogする関数 **//
+logRoomState = function(){
+  console.log(now() + "[ROOM]:" + JSON.stringify(userStates))
+}
+//****//
+
+
 
 //ゲームオブジェクト.ゲームの進行状態を管理
 let game = undefined
@@ -240,14 +252,14 @@ wsgame.on('connection', function(ws) {
         let data = JSON.parse(message);
         let now = new Date();
 
-        console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
+        console.log(now.toLocaleString() + '[Received]: %s', JSON.stringify(message));
 
         if (data.state == "join-room") {
             //用意していた辞書にuser情報を付与
-            connects.set(ws,data.user);
-            userIDMap[data.user.id] = data.user;
+            connects.set(ws,data.user)
+            userIDMap[data.user.id] = data.user
             userStates[data.user.id] = states.IDLE
-            console.log("room:" + JSON.stringify(userIDMap))
+            logRoomState()
 
             wschat.systemShout(`${data.user.name} が入室しました。` )
             //新しくJOINしてきたユーザには部屋に存在するユーザ全ての情報を投げる 
@@ -265,6 +277,7 @@ wsgame.on('connection', function(ws) {
         else if(data.state == "game-ready"){
           //ユーザの (!!もしまだ続くのなら!!)完了
           userStates[data.user_id] = states.READY
+          logRoomState()
           wsgame.broadcast(JSON.stringify({
             state:"game-ready",
             user_id:data.user_id
@@ -284,6 +297,7 @@ wsgame.on('connection', function(ws) {
             game = new GameObject.Game(userIDMap,connects,"test",wschat)
             game.generateNextTurn(await fetchOekakiTheme())
             game.next()//!!genだけにとどめて、次のユーザーの準備を待つのも可（voteで）!!//
+            logRoomState()
             //!!もしくはgen + nextのstartGame関数を用意する
           }
         }
@@ -294,12 +308,14 @@ wsgame.on('connection', function(ws) {
             if(!game.next()){
               //次がなかったらゲーム終了
               game.terminate()
-              userStates = userStates.map(() => {
-                return states.IDLE
-              })
+              Object.keys(userStates).forEach(id => {
+                userStates[id] = states.IDLE
+              }) 
+              logRoomState()
             }else{
               //次のターン開始
               roomState = roomStates.GAME
+              logRoomState()
             }
           }
         }
@@ -319,7 +335,7 @@ wsgame.on('connection', function(ws) {
         connects.delete(ws)
         delete userIDMap[leavingUser.id]
         delete userStates[leavingUser.id]
-        console.log("room:" + JSON.stringify(userIDMap))
+        logRoomState()
         //退室しやユーザをブロードキャスト
         wsgame.broadcast(JSON.stringify({
             "state": "leave-room",

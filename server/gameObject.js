@@ -47,8 +47,7 @@ class Game {
   vote(pid){
     //DURATION->GAME (次のターン開始まで)の切り替え要請とかに使う。
     this.waiting[pid] = null
-    console.log(JSON.stringify(this.waiting))
-    console.log(JSON.stringify(this.playerIDs))
+    //console.log(JSON.stringify(this.waiting))
     if(Object.keys(this.waiting).length === Object.keys(this.playerIDs).length){
       this.waiting = {}
       return true           //OK!始まるよ!
@@ -80,7 +79,6 @@ class Game {
 
     let drawerWS = connectWS.filter((ws)=>{
       //送信すべきwsオブジェクトがほしい
-      console.log(JSON.stringify(this.connects.get(ws)))
       let userid = this.connects.get(ws).id
       if(roleMap[userid] === roles.DRAW) return true
       else return false
