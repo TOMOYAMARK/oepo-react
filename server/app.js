@@ -286,7 +286,11 @@ wsgame.on('connection', function(ws) {
           if(Object.values(userStates).filter((state) => {
             return state === states.READY
           }).length === Object.values(userStates).length){
-            //!!userStatesをすべてゲーム中に!!//
+            //userStatesをすべてゲーム中に//
+            Object.keys(userStates).forEach(id => {
+              userStates[id] = states.GAME
+            }) 
+
             wsgame.broadcast(JSON.stringify({
               state:"game-start",
             }))
