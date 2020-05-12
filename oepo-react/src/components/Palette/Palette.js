@@ -112,22 +112,29 @@ export default class Palette extends React.Component {
               <Box style={{ width: 220, margin: 0 }}>{colorButtons}</Box>
             </Box>
             <Box style={{ width: 30, margin: 5}}>
-              <IconButton style={styles.button} iconStyle={styles.icon} tooltipStyles={styles.tooltip}>
+              <IconButton
+                style={styles.button} 
+                iconStyle={styles.icon} 
+                tooltipStyles={styles.tooltip}
+                disabled={!this.props.backable}
+                onClick={e => this.props.onBack()}
+              >
                 <ArrowBackRoundedIcon />
               </IconButton>
-              <IconButton style={styles.button} iconStyle={styles.icon} tooltipStyles={styles.tooltip}>
-                <ArrowForwardRoundedIcon />
+              <IconButton
+                style={styles.button}
+                iconStyle={styles.icon}
+                tooltipStyles={styles.tooltip}
+                disabled={!this.props.forwardable}
+                onClick={e => this.props.onForward()}
+              >
+                <ArrowForwardRoundedIcon/>
               </IconButton>
             </Box>
             <Box style={{ width: 40, margin: 5 }}>
-              <div
-                className="handle"
-
-              >
-                <Icon                style={{
-                  width: 30, height: 30, margin: 2
-                }} icon={dragIcon} />
-              </div>
+              <Icon className="handle" style={{
+                width: 30, height: 30, margin: 2
+              }} icon={dragIcon} />
               <IconButton style={styles.button} iconStyle={styles.icon} tooltipStyles={styles.tooltip}>
                 <DeleteForeverRoundedIcon />
               </IconButton>
