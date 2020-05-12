@@ -166,6 +166,9 @@ export default class Canvas extends React.Component {
       // layers と users の更新 (layer.isDrawing=false, user.layer=null)
       layers = layers.map(layer => layer == user.layer ? newLayer : layer);
       users = users.map(user => user.id == usrAct.id ? newUser : user);
+      // 戻る・進むボタンの処理
+      this.props.onChangeBackable(this.backable);
+      this.props.onChangeForwardable(this.forwardable);
     }
 
     // ユーザーが 戻るボタンを押した とき
@@ -195,7 +198,12 @@ export default class Canvas extends React.Component {
       } else {
         console.log('debug')
       }
+
+      // 戻る・進むボタンの処理
+      this.props.onChangeBackable(this.backable);
+      this.props.onChangeForwardable(this.forwardable);
     }
+
     // ユーザーが 進むボタンを押した とき
     if(usrAct.state == "forward"){
       console.log('handle message : forward');
@@ -225,8 +233,11 @@ export default class Canvas extends React.Component {
       } else {
         console.log('debug')
       }
-    }
 
+      // 戻る・進むボタンの処理
+      this.props.onChangeBackable(this.backable);
+      this.props.onChangeForwardable(this.forwardable);
+    }
 
     this.setState({
       layers: layers,

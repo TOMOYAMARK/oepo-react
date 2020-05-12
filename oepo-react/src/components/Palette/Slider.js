@@ -51,7 +51,7 @@ export default class Slider extends React.Component {
               ` height: 20px;`,
               ' left: -5px;',
               ' border-radius: 50%;',
-              ' border: 1px solid;',
+              // ' border: 1px solid;',
               ' background-color: transparent;',
               ' cursor: pointer;',
               '}'
