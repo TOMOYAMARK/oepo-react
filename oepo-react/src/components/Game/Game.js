@@ -332,7 +332,12 @@ class OekakiScreen extends React.Component{
   render(){
     return (
       <div className="game-container">
-        <AppBar theme={this.state.theme} onThemeUp={this.state.onThemeUp} />
+        <AppBar 
+          theme={this.state.theme} 
+          onThemeUp={this.state.onThemeUp}
+          setVolume={(value) => this.props.setVolume(value)}
+          volume={this.props.volume}
+           />
     
         <CanvasContainer
           onCorrect={this.state.onCorrect}
@@ -366,7 +371,8 @@ export class Game extends React.Component{
       //最初はロビー(名前入力)から
       screenState:this.screenStates.LOBBY,
       user:undefined,
-      soundStates:{}                        //効果音の状態辞書 (path:true/false)
+      soundStates:{},                       //効果音の状態辞書 (path:true/false)
+      soundVolume:50                        //効果音の音量
     }
   }
 
@@ -376,6 +382,10 @@ export class Game extends React.Component{
   goToGame(user){
     this.setState({user:user})
     this.setState({screenState:this.screenStates.GAME})
+  }
+
+  setVolume(value){
+    this.setState({soundVolume:value})
   }
 
 
@@ -389,7 +399,10 @@ export class Game extends React.Component{
     else if(this.state.screenState === this.screenStates.GAME){
           screen = <OekakiScreen 
             makeSound = {(se) => this.makeSound(se)} 
-            user = {this.state.user}/>
+            user = {this.state.user}
+            setVolume = {(value) => this.setVolume(value)}
+            volume={this.state.soundVolume}
+            />
     }
 
     return (
@@ -429,6 +442,7 @@ export class Game extends React.Component{
             playStatus={Sound.status.PLAYING}
             playFromPosition={300 /* in milliseconds */}
             onFinishedPlaying={() => this.handleSongFinishedPlaying(sound)}
+            volume={this.state.soundVolume}
           /> 
         </li>
       )
