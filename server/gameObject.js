@@ -7,9 +7,10 @@ const roles = {
 
 class Turn {
   constructor(playerRole,theme){
-    this.playerRole = playerRole      //プレイヤーの役割 : dict {playerID:ROLE}
-    this.theme = theme                //テーマ
-    this.correctPlayer = undefined    //正解者
+    this.playerRole = playerRole                            //プレイヤーの役割 : dict {playerID:ROLE}
+    this.theme = theme                                      //テーマデータ
+    this.themeLabels = JSON.parse(theme.labels_json)        //テーマの正解ラベルリスト(Array)
+    this.correctPlayer = undefined                          //正解者
   }
 }
 
@@ -39,7 +40,7 @@ class Game {
 
   answer(player,ans){
     //回答の照合
-    let isCorrect = (ans === this.currentTurn.theme.name)        //!!ただし、省略記法などの判定も今後必要。これは簡略化
+    let isCorrect = (this.currentTurn.themeLabels.includes(ans)) 
     if(isCorrect) this.currentTurn.correctPlayer = player
     return  isCorrect
   }
@@ -86,7 +87,10 @@ class Game {
 
     //書き手にのみテーマを送信
     drawerWS.forEach((ws) => {
-      ws.send(JSON.stringify({theme:this.currentTurn.theme}))
+      ws.send(JSON.stringify({
+        state:"theme-up",
+        theme:this.currentTurn.theme
+      }))
       this.wschat.systemShout(`${this.connects.get(ws).name}さんが書き手です。`)
     })
 

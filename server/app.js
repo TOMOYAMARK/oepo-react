@@ -37,12 +37,12 @@ function fetchOekakiTheme(){
 
     //データベースからランダムなお題を持ってきて返す。
     db.serialize(function() {  
-      db.get("SELECT name FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
+      db.get("SELECT name,labels_json FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
         if(err){
           //**エラーレスポンス**/
           reject(err)
         }
-        data = row//**本来ならば、略称や正解表示などの情報も含めてthemeオブジェクトとして扱う
+        data = row
         var now = new Date();
         console.log(now.toLocaleString() + "[THEME]" + JSON.stringify(data))
       });

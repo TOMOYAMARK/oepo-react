@@ -1,4 +1,6 @@
 import React from 'react'
+import Sound from 'react-sound'
+import SE from '../../utils/SE_PATH'
 import axios from '../../utils/API'
 import './Game.scss'
 import {ChatContainer} from '../Chat/ChatContainer'
@@ -138,7 +140,7 @@ class OekakiScreen extends React.Component{
     this.state = {
       users:[],                       //ユーザオブジェクト(id,名前,役割,ステータス)の配列
       gameState:this.gameStates.IDLE, //ゲームの状態
-      turnNum:0,                      //何ターン目
+      turnNum:0,                      //何ターン目                
     }
   }
 
@@ -168,7 +170,8 @@ class OekakiScreen extends React.Component{
 
   componentDidMount(){ 
     // websocketの準備
-    this.webSocket = new WebSocket("ws://localhost:3002");
+    let address = require('../../env.js').GAMEWS()
+    this.webSocket = new WebSocket(address);
     this.webSocket.onopen = (e => this.handleOnOpen(e));
     this.webSocket.onmessage = (e => this.handleOnMessage(e));
 
@@ -212,6 +215,8 @@ class OekakiScreen extends React.Component{
     else if(msg.state === "game-start"){
       //ゲーム開始
       this.setState({gameState:this.gameStates.GAME})
+      //効果音
+      this.props.makeSound(SE.Hajime)
     }
     else if(msg.state === "begin-turn"){
       //ターンの開始。各ユーザの役割とターン情報を反映。
@@ -225,8 +230,18 @@ class OekakiScreen extends React.Component{
 
       this.setState({users:users})
     }
+    else if(msg.state === "theme-up"){
+      //テーマを受け取る
+
+      //** テーマをゲーム画面に表示して通知 **//
+      //効果音
+      this.props.makeSound(SE.ThemeUp)
+    }
     else if(msg.state === "user-answered"){
       //ユーザが正解しました。正解者のuidも一緒。
+
+      //効果音を鳴らします。
+      this.props.makeSound(SE.CorrectAnswer)
 
       //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
       var msgSending = {
@@ -303,7 +318,10 @@ class OekakiScreen extends React.Component{
         <ControlPanel 
         startGame={() => this.startGame()}
         fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}
-        turnNum = {this.state.turnNum} />
+        turnNum = {this.state.turnNum}
+        makeSound = {(se) => this.props.makeSound(se)}
+         />
+
       </div>
     )
   }
@@ -322,6 +340,7 @@ export class Game extends React.Component{
       //最初はロビー(名前入力)から
       screenState:this.screenStates.LOBBY,
       user:undefined,
+      soundStates:{}                        //効果音の状態辞書 (path:true/false)
     }
   }
 
@@ -335,19 +354,62 @@ export class Game extends React.Component{
 
 
   render(){
+    var screen = undefined
     //ロビー画面
     if(this.state.screenState === this.screenStates.LOBBY){
-      return (
-        <LobbyScreen goToGame={(name) => this.goToGame(name)}/>
-      )
+      screen = <LobbyScreen goToGame={(name) => this.goToGame(name)}/>
     }
     //ゲーム画面
     else if(this.state.screenState === this.screenStates.GAME){
-      return (
-        <OekakiScreen user = {this.state.user}/>
-      )
+          screen = <OekakiScreen 
+            makeSound = {(se) => this.makeSound(se)} 
+            user = {this.state.user}/>
     }
 
+    return (
+      <div>
+        {screen}
+        {this.renderSounds()}
+      </div>
+    )
+
+  }
+
+  //効果音をトリガーするコンポーネントにpropsする。
+  //require(utils.SE_PATH.js).SE.%鳴らす効果音の名前%をmakeSound()に渡すと、それが鳴ります。
+  makeSound(se){
+    let soundStates = Object.assign({}, this.state.soundStates)
+    soundStates[se] = true
+
+    this.setState({soundStates:soundStates})
+  }
+
+  handleSongFinishedPlaying(se){
+    //Soundコンポーネントの描画をやめる 
+    let soundStates = Object.assign({}, this.state.soundStates)
+    soundStates[se] = false
+    this.setState({soundStates:soundStates})
+  }
+
+  renderSounds(){
+    const sounds = Object.keys(this.state.soundStates).filter(se => {
+      return this.state.soundStates[se]
+    })
+    const playlists = sounds.map(sound => 
+        <li>
+          <Sound
+            url={sound}
+            playStatus={Sound.status.PLAYING}
+            playFromPosition={300 /* in milliseconds */}
+            onFinishedPlaying={() => this.handleSongFinishedPlaying(sound)}
+          /> 
+        </li>
+      )
+
+      return (
+        <ul>{playlists}</ul>
+      )
+    
   }
 }
 

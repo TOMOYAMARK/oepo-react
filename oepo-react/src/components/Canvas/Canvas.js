@@ -26,12 +26,32 @@ export default class Canvas extends React.Component {
     }
   }
 
+  get backable() {
+    return this.state.imageQueue.filter(img => img.id == this.props.mainUsrId && !img.hidden).length > 0;
+  }
+
+  get forwardable() {
+    return this.state.imageQueue.filter(img => img.id == this.props.mainUsrId && img.hidden).length > 0; 
+  }
+
   componentDidMount() {
     console.log('component did mount');
     // ソケット
     this.webSocket = new WebSocket("ws://34.85.36.109:3001");
     this.webSocket.onmessage = (e => this.handleMessage(e));
     this.webSocket.onopen = (e => this.handleOpen(e));
+  }
+
+  drawing(ref, start, end, palette){
+    const ctx = ref.current.getContext('2d');
+    ctx.lineWidth = palette.weight;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = palette.state == "erase" ? "white" : palette.color;
+    ctx.globalAlpha = palette.opacity;
+    ctx.beginPath();
+    ctx.moveTo(start.x, start.y);
+    ctx.lineTo(end.x, end.y);
+    ctx.stroke();
   }
 
   handleOpen(e) {
@@ -82,15 +102,8 @@ export default class Canvas extends React.Component {
       console.log(usrAct.id);
       // ユーザーを取得
       const user = users.find(user => user.id == usrAct.id);
-      // context を取得
-      const ctx = user.layer.ref.current.getContext('2d');
-      // ドローする
-      ctx.lineWidth = 10;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(user.position.x, user.position.y);
-      ctx.lineTo(usrAct.position.x, usrAct.position.y);
-      ctx.stroke();
+      // user の ref へ描画
+      this.drawing(user.layer.ref, user.position, usrAct.position, usrAct.palette);
       // 新しいuserの状態を定義
       const newUser = {id: usrAct.id, layer: user.layer, position: usrAct.position};
       // users の更新
@@ -102,17 +115,14 @@ export default class Canvas extends React.Component {
       console.log('handle message : up');
       // ユーザーを取得
       const user = users.find(user => user.id == usrAct.id);
-      // context, mid context, base context を取得
-      const ctx = user.layer.ref.current.getContext('2d');
+      // mid context, base context を取得
       const midCtx = midLayerRef.current.getContext('2d');
       const baseCtx = baseLayerRef.current.getContext('2d');
       const containerCtx = containerRef.current.getContext('2d');
       // ドローする
-      ctx.beginPath();
-      ctx.moveTo(user.position.x, user.position.y);
-      ctx.lineTo(usrAct.position.x, usrAct.position.y);
-      ctx.stroke();
+      this.drawing(user.layer.ref, user.position, usrAct.position, usrAct.palette);
       // 画像を取得する
+      const ctx = user.layer.ref.current.getContext('2d');
       const image = ctx.getImageData(0, 0, 600, 500);
       const imageData = {
         id: user.id,
@@ -127,6 +137,7 @@ export default class Canvas extends React.Component {
         imageQueue = [...imageQueue, imageData];
         // midCtxに描画
         imageQueue.map(image => {
+          if(image.hidden) return;
           containerCtx.putImageData(image.image, 0, 0);
           midCtx.drawImage(containerRef.current, 0, 0);
         });
@@ -134,8 +145,10 @@ export default class Canvas extends React.Component {
         // imageQueueを追加する
         imageQueue = [...imageQueue, imageData];
         // baseの描画
-        containerCtx.putImageData(imageQueue[0].image, 0, 0);
-        baseCtx.drawImage(containerRef.current, 0, 0);
+        if(!imageQueue[0].hidden){
+          containerCtx.putImageData(imageQueue[0].image, 0, 0);
+          baseCtx.drawImage(containerRef.current, 0, 0);
+        }
         // midの再描画
         this.clearCanvas(midCtx, 600, 500);
         const newImageQueue = imageQueue.filter(image => image !== imageQueue[0]);
@@ -153,6 +166,9 @@ export default class Canvas extends React.Component {
       // layers と users の更新 (layer.isDrawing=false, user.layer=null)
       layers = layers.map(layer => layer == user.layer ? newLayer : layer);
       users = users.map(user => user.id == usrAct.id ? newUser : user);
+      // 戻る・進むボタンの処理
+      this.props.onChangeBackable(this.backable);
+      this.props.onChangeForwardable(this.forwardable);
     }
 
     // ユーザーが 戻るボタンを押した とき
@@ -182,7 +198,12 @@ export default class Canvas extends React.Component {
       } else {
         console.log('debug')
       }
+
+      // 戻る・進むボタンの処理
+      this.props.onChangeBackable(this.backable);
+      this.props.onChangeForwardable(this.forwardable);
     }
+
     // ユーザーが 進むボタンを押した とき
     if(usrAct.state == "forward"){
       console.log('handle message : forward');
@@ -212,8 +233,11 @@ export default class Canvas extends React.Component {
       } else {
         console.log('debug')
       }
-    }
 
+      // 戻る・進むボタンの処理
+      this.props.onChangeBackable(this.backable);
+      this.props.onChangeForwardable(this.forwardable);
+    }
 
     this.setState({
       layers: layers,
@@ -234,7 +258,8 @@ export default class Canvas extends React.Component {
       position: {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
-      }
+      },
+      palette: this.props.palette,
     }
 
     this.onMouseMove = this.handleMouseMove;
@@ -253,7 +278,8 @@ export default class Canvas extends React.Component {
       position: {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
-      }
+      },
+      palette: this.props.palette,
     }
 
     // console.log(json);
@@ -269,7 +295,8 @@ export default class Canvas extends React.Component {
       position: {
         x: e.nativeEvent.offsetX,
         y: e.nativeEvent.offsetY,
-      }
+      },
+      palette: this.props.palette,
     }
     // console.log(json);
 
@@ -345,18 +372,20 @@ export default class Canvas extends React.Component {
           onMouseDown={(e)=>this.handleMouseDown(e)}
           onMouseUp={(e)=>this.onMouseUp(e)}
         />
-        <button
-          style={{position: 'absolute', margin: "5px", left: "100px", top: "500px", zIndex:10}}
-          onClick={e => this.handleBack()}
-        >
-          戻る
-        </button>
+        {this.backable &&
+          <button
+            style={{position: 'absolute', margin: "5px", left: "100px", top: "500px", zIndex:10}}
+            onClick={e => this.handleBack()}
+          >
+            戻る
+          </button>}
+        {this.forwardable &&
         <button
          style={{position: 'absolute', margin: "5px", top: "500px", zIndex:10}}
          onClick={e => this.handleForward()}
         >
           進む
-        </button>
+        </button>}
       </div>
     )
   }
