@@ -140,20 +140,26 @@ class OekakiScreen extends React.Component{
     this.state = {
       users:[],                       //ユーザオブジェクト(id,名前,役割,ステータス)の配列
       gameState:this.gameStates.IDLE, //ゲームの状態
-      turnNum:0,                      //何ターン目                
+      turnNum:0,                      //何ターン目        
+      theme:null,                     //テーマ  
+      onCorrect:false,                //正解アニメーションのトリガー  
+      onThemeUp:false                 //テーマ表示のトリガー    
     }
   }
 
   async fetchOekakiTheme(){
     //テーマ取得にもオプションがつくかもしれないのでpostです
+    var theme = ""
     await axios
       .post( "/api/fetch/theme","{}")
       .then(res => {
         console.log(res.data)
+        theme = res.data.theme.name
       })
       .catch(() => {
         console.log("エラー");
       }); 
+      return theme
   }
 
   async requestGameStart(){
@@ -232,8 +238,9 @@ class OekakiScreen extends React.Component{
     }
     else if(msg.state === "theme-up"){
       //テーマを受け取る
+      let theme = msg.theme.name
+      this.setState({theme:theme})
 
-      //** テーマをゲーム画面に表示して通知 **//
       //効果音
       this.props.makeSound(SE.ThemeUp)
     }
@@ -242,6 +249,8 @@ class OekakiScreen extends React.Component{
 
       //効果音を鳴らします。
       this.props.makeSound(SE.CorrectAnswer)
+      //正解アニメーションを起動します
+      this.trigCorrect()
 
       //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
       var msgSending = {
@@ -301,13 +310,32 @@ class OekakiScreen extends React.Component{
     this.webSocket.send(json)
   }
 
+  showCorrect(){
+    this.props.makeSound(SE.CorrectAnswer)
+    this.setState({onCorrect:true})
+    setTimeout(() => this.setState({onCorrect:false}),1000)
+  }
+
+  async showOekakiTheme(){
+    //!!テーマ表示アニメーションテスト!!//
+
+    //取得
+    let theme = await this.fetchOekakiTheme()
+  
+    console.log(theme)
+    this.setState({theme:theme})
+
+    this.props.makeSound(SE.ThemeUp)
+    this.setState({onThemeUp:true})
+  }
+
   render(){
-    console.log(this.state.users);
     return (
       <div className="game-container">
-        <AppBar />
+        <AppBar theme={this.state.theme} />
     
         <CanvasContainer
+          onCorrect={this.state.onCorrect}
           mainUsrId={this.props.user.id}
           users={this.state.users}
         /> 
@@ -315,9 +343,9 @@ class OekakiScreen extends React.Component{
 
         <ControlPanel 
         startGame={() => this.startGame()}
-        fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}
+        showOekakiTheme={() => this.showOekakiTheme()} users={this.state.users}
         turnNum = {this.state.turnNum}
-        makeSound = {(se) => this.props.makeSound(se)}
+        correct = {() => this.showCorrect()}
          />
 
       </div>
@@ -372,6 +400,7 @@ export class Game extends React.Component{
     )
 
   }
+
 
   //効果音をトリガーするコンポーネントにpropsする。
   //require(utils.SE_PATH.js).SE.%鳴らす効果音の名前%をmakeSound()に渡すと、それが鳴ります。

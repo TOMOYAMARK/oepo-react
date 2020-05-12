@@ -17,7 +17,7 @@ export class AppBar extends React.Component{
   render(){
     return(
       <div className="app-bar">
-  
+        <p>{this.props.theme}</p>
       </div>
     )
   }
