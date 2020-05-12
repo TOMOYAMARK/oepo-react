@@ -1,7 +1,9 @@
 import React from 'react'
 import './Canvas.scss'
+import style from '../_variables.scss'
 import Canvas from './Canvas';
 import Palette from '../Palette/Palette';
+import {CorrectAnimation} from '../../utils/animation'
 
 export class CanvasContainer extends React.Component {
   constructor(props){
@@ -87,6 +89,8 @@ export class CanvasContainer extends React.Component {
   }
 
   render(){
+
+    console.log(this.props.onCorrect)
     return(
       <div className="canvas-container">
         <Canvas 
@@ -112,6 +116,8 @@ export class CanvasContainer extends React.Component {
           onForward={e => this.handleForward()}
           onClickReset={e => this.handleClickReset(e)}
         />
+
+        {CorrectAnimation(this.props.onCorrect)}
       </div>
     )
   }
