@@ -1,10 +1,13 @@
 import React from 'react'
 import style from  '../components/_variables.scss'
 import Grow from '@material-ui/core/Grow';
+import { Chip } from '@material-ui/core';
+import { Zoom } from '@material-ui/core';
+
 
 export const Correct = "img/Correct.svg"
 
-
+//正解アニメーション
 export function CorrectAnimation(trigger) { 
   return (
     <Grow
@@ -22,6 +25,17 @@ export function CorrectAnimation(trigger) {
       margin:"auto",
       }} src={Correct} width={`${style.canvasWidth}`} height={`${style.canvasHeight}`} />
     </Grow>
+  )
+}
+
+//テーマ表示
+export function ShowTheme(trigger,theme) {
+  return (
+  <Zoom in={trigger}>
+    <div style={{padding:"10px"}}>
+      <Chip variant='outlined' color='secondary' label={theme} />
+    </div>
+  </Zoom>
   )
 }
 

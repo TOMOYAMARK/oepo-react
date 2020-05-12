@@ -332,7 +332,7 @@ class OekakiScreen extends React.Component{
   render(){
     return (
       <div className="game-container">
-        <AppBar theme={this.state.theme} />
+        <AppBar theme={this.state.theme} onThemeUp={this.state.onThemeUp} />
     
         <CanvasContainer
           onCorrect={this.state.onCorrect}
