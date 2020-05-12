@@ -168,7 +168,8 @@ class OekakiScreen extends React.Component{
 
   componentDidMount(){ 
     // websocketの準備
-    this.webSocket = new WebSocket("ws://34.85.36.109:3002");
+    let address = require('../../env.js').GAMEWS()
+    this.webSocket = new WebSocket("ws://localhost:3002");
     this.webSocket.onopen = (e => this.handleOnOpen(e));
     this.webSocket.onmessage = (e => this.handleOnMessage(e));
 
