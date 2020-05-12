@@ -135,7 +135,12 @@ export default class Palette extends React.Component {
               <Icon className="handle" style={{
                 width: 30, height: 30, margin: 2
               }} icon={dragIcon} />
-              <IconButton style={styles.button} iconStyle={styles.icon} tooltipStyles={styles.tooltip}>
+              <IconButton
+                style={styles.button}
+                iconStyle={styles.icon}
+                tooltipStyles={styles.tooltip}
+                onClick={e => this.props.onClickReset()}
+              >
                 <DeleteForeverRoundedIcon />
               </IconButton>
             </Box>
