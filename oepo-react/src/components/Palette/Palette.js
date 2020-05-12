@@ -3,6 +3,14 @@ import {Button, Paper, Box} from '@material-ui/core';
 import Draggable from 'react-draggable';
 import Slider from './Slider';
 import './style.scss';
+import IconButton from '@material-ui/core/IconButton';
+import ArrowBackRoundedIcon from '@material-ui/icons/ArrowBackRounded';
+import ArrowForwardRoundedIcon from '@material-ui/icons/ArrowForwardRounded';
+import DeleteForeverRoundedIcon from '@material-ui/icons/DeleteForeverRounded';
+import BrushIcon from '@material-ui/icons/Brush';
+import { Icon, InlineIcon } from '@iconify/react';
+import eraserIcon from '@iconify/icons-mdi/eraser';
+import dragIcon from '@iconify/icons-mdi/drag';
 
 export default class Palette extends React.Component {
   render() {
@@ -25,46 +33,47 @@ export default class Palette extends React.Component {
         </Button>
       );
     });
+    const styles = {
+      button: {
+        width: 30,
+        height: 30,
+        padding: 0,
+        margin: 2,
+      },
+      icon: {
+        fontSize: 30,
+        color: '#fffff',
+      },
+      tooltip: {
+        marginLeft: 7,
+      }
+    }
     return (
       <Draggable handle=".handle">
-        <Paper elevation={3} style={{ width: 630 }}>
+        <Paper elevation={3} style={{ width: 580 }}>
           <Box display="flex">
             <Box
               style={{
-                width: 90,
+                width: 30,
                 margin: 5
               }}
             >
-              <Button
-                variant="contained"
-                onClick={e => this.props.onChangeState('erase')}
-                style={{
-                  maxWidth: "30px",
-                  maxHeight: "64px",
-                  minWidth: "30px",
-                  minHeight: "64px",
-                  margin: "2px 5px",
-                  backgroundColor: "white",
-                  fontSize: 11
-                }}
-              >
-                ゴム
-              </Button>
-              <Button
-                variant="contained"
+              <IconButton
+                style={styles.button}
+                iconStyle={styles.icon}
+                tooltipStyles={styles.tooltip}
                 onClick={e => this.props.onChangeState('draw')}
-                style={{
-                  maxWidth: "30px",
-                  maxHeight: "64px",
-                  minWidth: "30px",
-                  minHeight: "64px",
-                  margin: "2px 5px",
-                  backgroundColor: "white",
-                  fontSize: 11
-                }}
               >
-                ペン
-              </Button>
+                <BrushIcon />
+              </IconButton>
+              <IconButton
+                style={styles.button}
+                iconStyle={styles.icon}
+                tooltipStyles={styles.tooltip}
+                onClick={e => this.props.onChangeState('erase')}
+              >
+                <Icon icon={eraserIcon} />
+              </IconButton>
             </Box>
             <Box
               style={{
@@ -102,27 +111,27 @@ export default class Palette extends React.Component {
               <Box style={{ width: 220, margin: 0 }}>{colorButtons}</Box>
               <Box style={{ width: 220, margin: 0 }}>{colorButtons}</Box>
             </Box>
-            <Box style={{ width: 40, margin: 5 }}>
-              <Button
-                variant="contained"
-                onClick={e => console.log("click")}
-                style={{
-                  maxWidth: "30px",
-                  maxHeight: "64px",
-                  minWidth: "30px",
-                  minHeight: "50px",
-                  margin: "2px 0px",
-                  backgroundColor: "white",
-                  fontSize: 11
-                }}
-              >
-                初期化
-              </Button>
+            <Box style={{ width: 30, margin: 5}}>
+              <IconButton style={styles.button} iconStyle={styles.icon} tooltipStyles={styles.tooltip}>
+                <ArrowBackRoundedIcon />
+              </IconButton>
+              <IconButton style={styles.button} iconStyle={styles.icon} tooltipStyles={styles.tooltip}>
+                <ArrowForwardRoundedIcon />
+              </IconButton>
             </Box>
-            <div
-              className="handle"
-              style={{ width: 20, margin: 5, backgroundColor: "gray" }}
-            />
+            <Box style={{ width: 40, margin: 5 }}>
+              <div
+                className="handle"
+
+              >
+                <Icon                style={{
+                  width: 30, height: 30, margin: 2
+                }} icon={dragIcon} />
+              </div>
+              <IconButton style={styles.button} iconStyle={styles.icon} tooltipStyles={styles.tooltip}>
+                <DeleteForeverRoundedIcon />
+              </IconButton>
+            </Box>
           </Box>
         </Paper>
       </Draggable>
