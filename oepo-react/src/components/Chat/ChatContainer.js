@@ -11,11 +11,16 @@ import Button from '@material-ui/core/Button';
 class ChatDisplay extends React.Component{
   constructor(props){
     super(props);
+    this.ref = React.createRef();
+  }
+
+  componentDidUpdate() {
+    this.ref.current.scrollTop = this.ref.current.scrollHeight;
   }
 
   render() {
     return (
-      <div className="chat-disp">
+      <div className="chat-disp" ref={this.ref}>
         {this.props.msgQueue.map((item,i) => (
           <p key={i}><span className="status-txt">{item.status.name}</span>:<span className="msg-txt">{item.body}</span> </p>
         ))}
@@ -52,13 +57,13 @@ export class ChatContainer extends React.Component{
 
     const json = e.data;
     const msg = JSON.parse(json);
-    console.log(msg)
+    console.log(msg);
 
     var msgQueue = this.state.msgQueue.slice();
     msgQueue.push(msg);
 
     this.setState({
-      msgQueue:msgQueue
+      msgQueue:msgQueue,
     });
   }
 
@@ -68,18 +73,37 @@ export class ChatContainer extends React.Component{
 
         <ChatDisplay msgQueue={this.state.msgQueue}/>
         <Grid container>
-          <FormControl className="txt-field" variant="outlined" style={{width:`calc(${style.chatWidth} - 50px)`}} defaultValue="">
+          <FormControl
+            className="txt-field"
+            variant="outlined"
+            style={{width:`calc(${style.chatWidth} - 50px)`}}
+            defaultValue=""
+          >
             <Input
-            style={{height:'50px'}}
-            value={this.state.msgValue}
-            onChange={event => this.setState({msgValue: event.target.value})}>
+              style={{height:'50px'}}
+              value={this.state.msgValue}
+              onChange={e => this.setState({msgValue: e.target.value})}
+              onKeyPress={e => {
+                if (e.key == 'Enter' && this.state.msgValue != "") {
+                  e.preventDefault();
+                  this.handleSubmit({
+                    status: this.props.user,
+                    body:this.state.msgValue,
+                  });
+                  this.setState({
+                    msgValue: "",
+                  });
+                }
+              }}
+            >
             </Input>
           </FormControl>
-          <button className="submit-btn"
+          <button
+            className="submit-btn"
             style={{width:'50px'}} 
             onClick={ () => this.handleSubmit({
               status:this.props.user,
-              body:this.state.msgValue
+              body:this.state.msgValue,
             })}
           >
               送信
