@@ -26,12 +26,12 @@ export default class Canvas extends React.Component {
     }
   }
 
-  get backable() {
-    return this.state.imageQueue.filter(img => img.id == this.props.mainUsrId && !img.hidden).length > 0;
+  backable(imageQueue) {
+    return imageQueue.filter(img => img.id == this.props.mainUsrId && !img.hidden).length > 0;
   }
 
-  get forwardable() {
-    return this.state.imageQueue.filter(img => img.id == this.props.mainUsrId && img.hidden).length > 0; 
+  forwardable(imageQueue) {
+    return imageQueue.filter(img => img.id == this.props.mainUsrId && img.hidden).length > 0; 
   }
 
   componentDidMount() {
@@ -40,6 +40,25 @@ export default class Canvas extends React.Component {
     this.webSocket = new WebSocket("ws://34.85.36.109:3001");
     this.webSocket.onmessage = (e => this.handleMessage(e));
     this.webSocket.onopen = (e => this.handleOpen(e));
+  }
+
+  componentDidUpdate() {
+    console.log('component did update');
+    console.log(this.props.palette.buttonState);
+    if(this.props.palette.buttonState === "reset"){
+      this.handleReset();
+      this.props.onResetInCv();
+    }
+
+    if(this.props.palette.buttonState === "back"){
+      this.handleBack();
+      this.props.onResetInCv();
+    }
+
+    if(this.props.palette.buttonState === "forward"){
+      this.handleForward();
+      this.props.onResetInCv();
+    }
   }
 
   drawing(ref, start, end, palette){
@@ -167,8 +186,8 @@ export default class Canvas extends React.Component {
       layers = layers.map(layer => layer == user.layer ? newLayer : layer);
       users = users.map(user => user.id == usrAct.id ? newUser : user);
       // 戻る・進むボタンの処理
-      this.props.onChangeBackable(this.backable);
-      this.props.onChangeForwardable(this.forwardable);
+      this.props.onChangeBackable(this.backable(imageQueue));
+      this.props.onChangeForwardable(this.forwardable(imageQueue));
     }
 
     // ユーザーが 戻るボタンを押した とき
@@ -200,8 +219,8 @@ export default class Canvas extends React.Component {
       }
 
       // 戻る・進むボタンの処理
-      this.props.onChangeBackable(this.backable);
-      this.props.onChangeForwardable(this.forwardable);
+      this.props.onChangeBackable(this.backable(imageQueue));
+      this.props.onChangeForwardable(this.forwardable(imageQueue));
     }
 
     // ユーザーが 進むボタンを押した とき
@@ -235,14 +254,30 @@ export default class Canvas extends React.Component {
       }
 
       // 戻る・進むボタンの処理
-      this.props.onChangeBackable(this.backable);
-      this.props.onChangeForwardable(this.forwardable);
+      this.props.onChangeBackable(this.backable(imageQueue));
+      this.props.onChangeForwardable(this.forwardable(imageQueue));
     }
 
     if(usrAct.state == 'reset'){
       console.log('handle message : reset');
+      const containerCtx = containerRef.current.getContext('2d');
+      const midCtx = midLayerRef.current.getContext('2d');
+      const baseCtx = baseLayerRef.current.getContext('2d');
 
-      
+      // baseLayerの消去
+      this.clearCanvas(baseCtx, 600, 500);
+      // midの消去
+      this.clearCanvas(midCtx, 600, 500);
+      // layersの消去
+      this.state.layers.map(layer => {
+        const ctx = layer.ref.current.getContext('2d');
+        this.clearCanvas(ctx, 600, 500);
+      });
+      // queueの消去
+      imageQueue = [];
+      // マウス動いてる途中で全消しした場合
+      this.onMouseMove = () => {};
+      this.onMouseUp = () => {};
     }
 
     this.setState({
@@ -336,6 +371,16 @@ export default class Canvas extends React.Component {
     this.webSocket.send(JSON.stringify(json));
   }
 
+  handleReset() {
+    console.log('handle reset');
+
+    const json = {
+      id: this.props.mainUsrId,
+      state: "reset",
+    };
+    this.webSocket.send(JSON.stringify(json));
+  }
+
   render() {
     const layers = this.state.layers.map((layer, idx) => {
       return (
@@ -378,20 +423,6 @@ export default class Canvas extends React.Component {
           onMouseDown={(e)=>this.handleMouseDown(e)}
           onMouseUp={(e)=>this.onMouseUp(e)}
         />
-        {this.backable &&
-          <button
-            style={{position: 'absolute', margin: "5px", left: "100px", top: "500px", zIndex:10}}
-            onClick={e => this.handleBack()}
-          >
-            戻る
-          </button>}
-        {this.forwardable &&
-        <button
-         style={{position: 'absolute', margin: "5px", top: "500px", zIndex:10}}
-         onClick={e => this.handleForward()}
-        >
-          進む
-        </button>}
       </div>
     )
   }
