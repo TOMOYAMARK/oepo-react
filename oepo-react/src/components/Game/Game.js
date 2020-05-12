@@ -239,10 +239,8 @@ class OekakiScreen extends React.Component{
     else if(msg.state === "theme-up"){
       //テーマを受け取る
       let theme = msg.theme.name
-      this.setState({theme:theme})
-
-      //効果音
-      this.props.makeSound(SE.ThemeUp)
+      //テーマの表示
+      this.showOekakiTheme(theme)
     }
     else if(msg.state === "user-answered"){
       //ユーザが正解しました。正解者のuidも一緒。
@@ -250,7 +248,7 @@ class OekakiScreen extends React.Component{
       //効果音を鳴らします。
       this.props.makeSound(SE.CorrectAnswer)
       //正解アニメーションを起動します
-      this.trigCorrect()
+      this.showCorrect()
 
       //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
       var msgSending = {
@@ -260,6 +258,9 @@ class OekakiScreen extends React.Component{
       
       console.log(msgSending)
       const json = JSON.stringify(msgSending)
+
+      //テーマをクリアして、準備完了！
+      this.initOekakiTheme()
       this.webSocket.send(json)
     }
     else if(msg.state === "game-finished"){
@@ -316,17 +317,21 @@ class OekakiScreen extends React.Component{
     setTimeout(() => this.setState({onCorrect:false}),1000)
   }
 
-  async showOekakiTheme(){
-    //!!テーマ表示アニメーションテスト!!//
-
+  async showOekakiTheme(theme){
     //取得
-    let theme = await this.fetchOekakiTheme()
+    if(theme === undefined)
+      theme = await this.fetchOekakiTheme() //!!テスト用のボタン用処理
   
-    console.log(theme)
     this.setState({theme:theme})
 
     this.props.makeSound(SE.ThemeUp)
     this.setState({onThemeUp:true})
+  }
+
+  //テーマ初期化。コンポーネントを非表示に。
+  initOekakiTheme(){
+    this.setState({onThemeUp:false})
+    this.setState({theme:null})
   }
 
   render(){
