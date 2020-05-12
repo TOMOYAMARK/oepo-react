@@ -239,6 +239,12 @@ export default class Canvas extends React.Component {
       this.props.onChangeForwardable(this.forwardable);
     }
 
+    if(usrAct.state == 'reset'){
+      console.log('handle message : reset');
+
+      
+    }
+
     this.setState({
       layers: layers,
       users: users,
@@ -336,7 +342,7 @@ export default class Canvas extends React.Component {
         <canvas
           ref={layer.ref}
           key={idx}
-          style={{position: 'absolute', top: 0, left: 0, zIndex: 8-idx}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: idx+2}}
           width="600px"
           height="500px"
         />
@@ -348,26 +354,26 @@ export default class Canvas extends React.Component {
         <canvas
           width='600px'
           height='500px'
-          style={{position: 'absolute', top: 0, left: 0, zIndex: 10, display: 'none'}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 0, display: 'none'}}
           ref={this.state.containerRef}
         />
         <canvas
           width='600px'
           height='500px'
-          style={{position: 'absolute', top: 0, left: 0, zIndex: 10}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 0}}
           ref={this.state.baseLayerRef}
         />
         <canvas
           width='600px'
           height='500px'
-          style={{position: 'absolute', top: 0, left: 0, zIndex: 9}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 1}}
           ref={this.state.midLayerRef}
         />
         {layers}
         <canvas
           width="600px"
           height="500px"
-          style={{position: 'absolute', top: 0, left: 0, zIndex: 11}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 8}}
           onMouseMove={(e)=>this.onMouseMove(e)}
           onMouseDown={(e)=>this.handleMouseDown(e)}
           onMouseUp={(e)=>this.onMouseUp(e)}
