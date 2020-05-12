@@ -87,7 +87,10 @@ class Game {
 
     //書き手にのみテーマを送信
     drawerWS.forEach((ws) => {
-      ws.send(JSON.stringify({theme:this.currentTurn.theme}))
+      ws.send(JSON.stringify({
+        state:"theme-up",
+        theme:this.currentTurn.theme
+      }))
       this.wschat.systemShout(`${this.connects.get(ws).name}さんが書き手です。`)
     })
 

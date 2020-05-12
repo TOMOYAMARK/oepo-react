@@ -215,6 +215,8 @@ class OekakiScreen extends React.Component{
     else if(msg.state === "game-start"){
       //ゲーム開始
       this.setState({gameState:this.gameStates.GAME})
+      //効果音
+      this.props.makeSound(SE.Hajime)
     }
     else if(msg.state === "begin-turn"){
       //ターンの開始。各ユーザの役割とターン情報を反映。
@@ -228,8 +230,18 @@ class OekakiScreen extends React.Component{
 
       this.setState({users:users})
     }
+    else if(msg.state === "theme-up"){
+      //テーマを受け取る
+
+      //** テーマをゲーム画面に表示して通知 **//
+      //効果音
+      this.props.makeSound(SE.ThemeUp)
+    }
     else if(msg.state === "user-answered"){
       //ユーザが正解しました。正解者のuidも一緒。
+
+      //効果音を鳴らします。
+      this.props.makeSound(SE.CorrectAnswer)
 
       //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
       var msgSending = {
@@ -361,7 +373,8 @@ export class Game extends React.Component{
 
   }
 
-  //効果音をトリガーするコンポーネントにpropsする
+  //効果音をトリガーするコンポーネントにpropsする。
+  //require(utils.SE_PATH.js).SE.%鳴らす効果音の名前%をmakeSound()に渡すと、それが鳴ります。
   makeSound(se){
     let soundStates = Object.assign({}, this.state.soundStates)
     soundStates[se] = true
