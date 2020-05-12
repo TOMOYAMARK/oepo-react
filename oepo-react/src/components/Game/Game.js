@@ -1,4 +1,6 @@
 import React from 'react'
+import Sound from 'react-sound'
+import SE from '../../utils/SE_PATH'
 import axios from '../../utils/API'
 import './Game.scss'
 import {ChatContainer} from '../Chat/ChatContainer'
@@ -138,7 +140,7 @@ class OekakiScreen extends React.Component{
     this.state = {
       users:[],                       //ユーザオブジェクト(id,名前,役割,ステータス)の配列
       gameState:this.gameStates.IDLE, //ゲームの状態
-      turnNum:0,                      //何ターン目
+      turnNum:0,                      //何ターン目                
     }
   }
 
@@ -169,7 +171,7 @@ class OekakiScreen extends React.Component{
   componentDidMount(){ 
     // websocketの準備
     let address = require('../../env.js').GAMEWS()
-    this.webSocket = new WebSocket("ws://localhost:3002");
+    this.webSocket = new WebSocket(address);
     this.webSocket.onopen = (e => this.handleOnOpen(e));
     this.webSocket.onmessage = (e => this.handleOnMessage(e));
 
@@ -302,7 +304,10 @@ class OekakiScreen extends React.Component{
         <ControlPanel 
         startGame={() => this.startGame()}
         fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}
-        turnNum = {this.state.turnNum} />
+        turnNum = {this.state.turnNum}
+        makeSound = {(se) => this.props.makeSound(se)}
+         />
+
       </div>
     )
   }
@@ -321,6 +326,7 @@ export class Game extends React.Component{
       //最初はロビー(名前入力)から
       screenState:this.screenStates.LOBBY,
       user:undefined,
+      soundStates:{}                        //効果音の状態辞書 (path:true/false)
     }
   }
 
@@ -334,19 +340,61 @@ export class Game extends React.Component{
 
 
   render(){
+    var screen = undefined
     //ロビー画面
     if(this.state.screenState === this.screenStates.LOBBY){
-      return (
-        <LobbyScreen goToGame={(name) => this.goToGame(name)}/>
-      )
+      screen = <LobbyScreen goToGame={(name) => this.goToGame(name)}/>
     }
     //ゲーム画面
     else if(this.state.screenState === this.screenStates.GAME){
-      return (
-        <OekakiScreen user = {this.state.user}/>
-      )
+          screen = <OekakiScreen 
+            makeSound = {(se) => this.makeSound(se)} 
+            user = {this.state.user}/>
     }
 
+    return (
+      <div>
+        {screen}
+        {this.renderSounds()}
+      </div>
+    )
+
+  }
+
+  //効果音をトリガーするコンポーネントにpropsする
+  makeSound(se){
+    let soundStates = Object.assign({}, this.state.soundStates)
+    soundStates[se] = true
+
+    this.setState({soundStates:soundStates})
+  }
+
+  handleSongFinishedPlaying(se){
+    //Soundコンポーネントの描画をやめる 
+    let soundStates = Object.assign({}, this.state.soundStates)
+    soundStates[se] = false
+    this.setState({soundStates:soundStates})
+  }
+
+  renderSounds(){
+    const sounds = Object.keys(this.state.soundStates).filter(se => {
+      return this.state.soundStates[se]
+    })
+    const playlists = sounds.map(sound => 
+        <li>
+          <Sound
+            url={sound}
+            playStatus={Sound.status.PLAYING}
+            playFromPosition={300 /* in milliseconds */}
+            onFinishedPlaying={() => this.handleSongFinishedPlaying(sound)}
+          /> 
+        </li>
+      )
+
+      return (
+        <ul>{playlists}</ul>
+      )
+    
   }
 }
 
