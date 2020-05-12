@@ -36,11 +36,27 @@ export class ChatContainer extends React.Component{
 
     // websocketの準備
     this.webSocket = new WebSocket("ws://34.85.36.109:3000");
-    this.webSocket.onmessage = (e => this.handleOnMessage(e));
+    this.ref = React.createRef();
 
     this.state = {
       msgValue:"",
       msgQueue:[],
+    }
+  }
+
+  componentDidMount() {
+    document.addEventListener('keypress', e => this.handleKeyDown(e));
+    this.webSocket.onmessage = (e => this.handleOnMessage(e));
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keypress', e => this.handleKeyDown(e));
+  }
+
+  handleKeyDown(e) {
+    if(e.key === 'Enter') {
+      console.log('handle key down enter');
+      this.ref.current.focus();
     }
   }
 
@@ -80,6 +96,7 @@ export class ChatContainer extends React.Component{
             defaultValue=""
           >
             <Input
+              inputRef={this.ref}
               style={{height:'50px'}}
               value={this.state.msgValue}
               onChange={e => this.setState({msgValue: e.target.value})}
@@ -95,6 +112,7 @@ export class ChatContainer extends React.Component{
                   });
                 }
               }}
+              onFocus={e => console.log('on focus')}
             >
             </Input>
           </FormControl>
