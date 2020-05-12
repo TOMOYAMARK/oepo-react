@@ -1,6 +1,6 @@
 
 
-const debug = true                //true -> wsをすべてlocalhostに
+const debug = false                //true -> wsをすべてlocalhostに
 
 const IPAddres = "34.85.36.109"
 const localhost = "localhost"
