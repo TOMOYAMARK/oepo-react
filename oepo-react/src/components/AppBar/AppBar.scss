@@ -3,9 +3,37 @@
 $appbarWidth : $gameWidth;
 $appbarHeight : 50px;
 
+$themeContainerWidth:$canvasContainerWidth;
+
 
 .app-bar{
+  position:relative;
   width: $appbarWidth;
   height: $appbarHeight;
-  background-color: blue;
+  background-color: white;
+
+  .theme-container{
+    width:$themeContainerWidth;
+    height:$appbarHeight;
+  }
+
+  >div{
+    position: relative;
+    float:left;
+    height:$appbarHeight;
+    margin:0 5px;
+  }
+
+  >div.icon{
+    width:20px;
+  }
+
+  .centerize{
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    margin : auto;
+  }
 }

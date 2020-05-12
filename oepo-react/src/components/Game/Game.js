@@ -140,20 +140,26 @@ class OekakiScreen extends React.Component{
     this.state = {
       users:[],                       //ユーザオブジェクト(id,名前,役割,ステータス)の配列
       gameState:this.gameStates.IDLE, //ゲームの状態
-      turnNum:0,                      //何ターン目                
+      turnNum:0,                      //何ターン目        
+      theme:null,                     //テーマ  
+      onCorrect:false,                //正解アニメーションのトリガー  
+      onThemeUp:false                 //テーマ表示のトリガー    
     }
   }
 
   async fetchOekakiTheme(){
     //テーマ取得にもオプションがつくかもしれないのでpostです
+    var theme = ""
     await axios
       .post( "/api/fetch/theme","{}")
       .then(res => {
         console.log(res.data)
+        theme = res.data.theme.name
       })
       .catch(() => {
         console.log("エラー");
       }); 
+      return theme
   }
 
   async requestGameStart(){
@@ -232,16 +238,17 @@ class OekakiScreen extends React.Component{
     }
     else if(msg.state === "theme-up"){
       //テーマを受け取る
-
-      //** テーマをゲーム画面に表示して通知 **//
-      //効果音
-      this.props.makeSound(SE.ThemeUp)
+      let theme = msg.theme.name
+      //テーマの表示
+      this.showOekakiTheme(theme)
     }
     else if(msg.state === "user-answered"){
       //ユーザが正解しました。正解者のuidも一緒。
 
       //効果音を鳴らします。
       this.props.makeSound(SE.CorrectAnswer)
+      //正解アニメーションを起動します
+      this.showCorrect()
 
       //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
       var msgSending = {
@@ -251,6 +258,9 @@ class OekakiScreen extends React.Component{
       
       console.log(msgSending)
       const json = JSON.stringify(msgSending)
+
+      //テーマをクリアして、準備完了！
+      this.initOekakiTheme()
       this.webSocket.send(json)
     }
     else if(msg.state === "game-finished"){
@@ -301,13 +311,41 @@ class OekakiScreen extends React.Component{
     this.webSocket.send(json)
   }
 
+  showCorrect(){
+    this.props.makeSound(SE.CorrectAnswer)
+    this.setState({onCorrect:true})
+    setTimeout(() => this.setState({onCorrect:false}),1000)
+  }
+
+  async showOekakiTheme(theme){
+    //取得
+    if(theme === undefined)
+      theme = await this.fetchOekakiTheme() //!!テスト用のボタン用処理
+  
+    this.setState({theme:theme})
+
+    this.props.makeSound(SE.ThemeUp)
+    this.setState({onThemeUp:true})
+  }
+
+  //テーマ初期化。コンポーネントを非表示に。
+  initOekakiTheme(){
+    this.setState({onThemeUp:false})
+    this.setState({theme:null})
+  }
+
   render(){
-    console.log(this.state.users);
     return (
       <div className="game-container">
-        <AppBar />
+        <AppBar 
+          theme={this.state.theme} 
+          onThemeUp={this.state.onThemeUp}
+          setVolume={(value) => this.props.setVolume(value)}
+          volume={this.props.volume}
+           />
     
         <CanvasContainer
+          onCorrect={this.state.onCorrect}
           mainUsrId={this.props.user.id}
           users={this.state.users}
         /> 
@@ -317,9 +355,9 @@ class OekakiScreen extends React.Component{
 
         <ControlPanel 
         startGame={() => this.startGame()}
-        fetchOekakiTheme={() => this.fetchOekakiTheme()} users={this.state.users}
+        showOekakiTheme={() => this.showOekakiTheme()} users={this.state.users}
         turnNum = {this.state.turnNum}
-        makeSound = {(se) => this.props.makeSound(se)}
+        correct = {() => this.showCorrect()}
          />
 
       </div>
@@ -340,7 +378,8 @@ export class Game extends React.Component{
       //最初はロビー(名前入力)から
       screenState:this.screenStates.LOBBY,
       user:undefined,
-      soundStates:{}                        //効果音の状態辞書 (path:true/false)
+      soundStates:{},                       //効果音の状態辞書 (path:true/false)
+      soundVolume:50                        //効果音の音量
     }
   }
 
@@ -350,6 +389,10 @@ export class Game extends React.Component{
   goToGame(user){
     this.setState({user:user})
     this.setState({screenState:this.screenStates.GAME})
+  }
+
+  setVolume(value){
+    this.setState({soundVolume:value})
   }
 
 
@@ -363,7 +406,10 @@ export class Game extends React.Component{
     else if(this.state.screenState === this.screenStates.GAME){
           screen = <OekakiScreen 
             makeSound = {(se) => this.makeSound(se)} 
-            user = {this.state.user}/>
+            user = {this.state.user}
+            setVolume = {(value) => this.setVolume(value)}
+            volume={this.state.soundVolume}
+            />
     }
 
     return (
@@ -374,6 +420,7 @@ export class Game extends React.Component{
     )
 
   }
+
 
   //効果音をトリガーするコンポーネントにpropsする。
   //require(utils.SE_PATH.js).SE.%鳴らす効果音の名前%をmakeSound()に渡すと、それが鳴ります。
@@ -402,6 +449,7 @@ export class Game extends React.Component{
             playStatus={Sound.status.PLAYING}
             playFromPosition={300 /* in milliseconds */}
             onFinishedPlaying={() => this.handleSongFinishedPlaying(sound)}
+            volume={this.state.soundVolume}
           /> 
         </li>
       )

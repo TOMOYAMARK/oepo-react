@@ -8,10 +8,16 @@ $canvasHeight : 400px;
 $chatWidth : $gameWidth * 0.3;
 $chatHeight : $gameHeight * 0.7;
 $roomCapacity : 5;
+$canvasContainerWidth : $gameWidth * 0.7;
+$canvasContainerHeight : $gameHeight * 0.7;
 
 :export{
   gameWidth:$gameWidth;
   gameHeight:$gameHeight;
+  canvasWidth:$canvasWidth;
+  canvasHeight:$canvasHeight;
+  canvasContainerWidth:$canvasContainerWidth;
+  canvasContainerHeight:$canvasContainerHeight;
   chatWidth:$chatWidth;
   chatHeight:$chatHeight;
   roomCapacity:$roomCapacity;

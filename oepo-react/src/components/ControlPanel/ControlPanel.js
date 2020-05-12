@@ -26,9 +26,9 @@ export class ControlPanel extends React.Component{
             ))}
           </div>
           <div className="controller">
-            <button onClick={() => this.props.fetchOekakiTheme()}>テーマを取得</button>
+            <button onClick={() => this.props.showOekakiTheme()}>テーマを表示</button>
             <button onClick={() => this.props.startGame()}>準備完了</button>
-            <button onClick={() => {this.props.makeSound(SE.CorrectAnswer)}}>正解音を鳴らす</button>
+            <button onClick={() => this.props.correct()}>正解する</button>
             <p>ターン:{this.props.turnNum}</p>
             
           </div>

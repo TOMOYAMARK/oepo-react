@@ -1,7 +1,9 @@
 import React from 'react'
 import './Canvas.scss'
+import style from '../_variables.scss'
 import Canvas from './Canvas';
 import Palette from '../Palette/Palette';
+import {CorrectAnimation} from '../../utils/animation'
 
 export class CanvasContainer extends React.Component {
   constructor(props){
@@ -14,6 +16,7 @@ export class CanvasContainer extends React.Component {
       colors: ["blue", "red", "yellow", "green", "black", "white"],
       isBackable: false,
       isForwardable: false,
+      buttonState: "",
     };
   }
 
@@ -45,6 +48,18 @@ export class CanvasContainer extends React.Component {
     });
   }
 
+  handleClickReset() {
+    this.setState({
+      buttonState: "reset",
+    })
+  }
+
+  handleResetInCv() {
+    this.setState({
+      buttonState: "",
+    })
+  }
+
   handleChangeBackable(isBackable) {
     console.log('handle change backable : ' + isBackable);
     this.setState({
@@ -61,13 +76,21 @@ export class CanvasContainer extends React.Component {
 
   handleBack() {
     console.log('handle back');
+    this.setState({
+      buttonState: "back",
+    })
   }
 
   handleForward() {
     console.log('handle forward');
+    this.setState({
+      buttonState: "forward",
+    })
   }
 
   render(){
+
+    console.log(this.props.onCorrect)
     return(
       <div className="canvas-container">
         <Canvas 
@@ -75,6 +98,7 @@ export class CanvasContainer extends React.Component {
           palette={this.state}
           onChangeBackable={isAble => this.handleChangeBackable(isAble)}
           onChangeForwardable={isAble => this.handleChangeForwardable(isAble)}
+          onResetInCv={e => this.handleResetInCv()}
         />
         <Palette
           state={this.state.state}
@@ -90,7 +114,10 @@ export class CanvasContainer extends React.Component {
           onChangeState={state => this.handleChangeState(state)}
           onBack={e => this.handleBack()}
           onForward={e => this.handleForward()}
+          onClickReset={e => this.handleClickReset(e)}
         />
+
+        {CorrectAnimation(this.props.onCorrect)}
       </div>
     )
   }
