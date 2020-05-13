@@ -32,27 +32,53 @@ function run(sql, params) {
 */
 
 //テーマをランダムに返す(promise) awaitしてね⭐︎
-function fetchOekakiTheme(){
+function fetchOekakiTheme(name){
   return new Promise ((resolve,reject) => {
-    var db = new sqlite3.Database(dbname);
-    var data = {}
+    //ランダムにテーマを取得
+    if(name === undefined){
+      var db = new sqlite3.Database(dbname);
+      var data = {}
 
-    //データベースからランダムなお題を持ってきて返す。
-    db.serialize(function() {  
-      db.get("SELECT name,labels_json FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
-        if(err){
-          //**エラーレスポンス**/
-          reject(err)
-        }
-        data = row
-        var now = new Date();
-        console.log(now.toLocaleString() + "[THEME]" + JSON.stringify(data))
+      //データベースからランダムなお題を持ってきて返す。
+      db.serialize(function() {  
+        db.get("SELECT name,labels_json FROM oekaki_theme ORDER BY RANDOM() LIMIT 1", function(err, row) {
+          if(err){
+            //**エラーレスポンス**/
+            reject(err)
+          }
+          data = row
+          var now = new Date();
+          console.log(now.toLocaleString() + "[RANDOM-THEME]" + JSON.stringify(data))
+        });
       });
-    });
-    db.close(() => {
-      //成功のコールバック
-      resolve(data) 
-    });  
+      db.close(() => {
+        //成功のコールバック
+        resolve(data) 
+      });
+  }
+    
+    else {
+      console.log("enter specific")
+      //特定テーマデータの取得
+      var db = new sqlite3.Database(dbname);
+      var data = {}
+      db.serialize(function() {  
+        var stmt = db.prepare("SELECT name,labels_json FROM oekaki_theme WHERE name = ?")
+        stmt.get(name, function(err, row) {
+          if(err){
+            //**エラーレスポンス**/
+            reject(err)
+          }
+          data = row
+          var now = new Date();
+          console.log(now.toLocaleString() + "[SPECIFIC-THEME]" + JSON.stringify(data))
+        });
+      });
+      db.close(() => {
+        //成功のコールバック
+        resolve(data) 
+      });
+    }
   })
 }
 
@@ -112,8 +138,31 @@ app.post('/api/user/login', (req,res) => {
 
 })
 
+app.post('/api/post/theme', async function (req, res) {
+  //お絵かきのテーマ投稿処理
+  var db = new sqlite3.Database(dbname);
+
+  let name = req.body.theme
+  let labels_json = JSON.stringify(req.body.labels)
+
+  db.serialize(function() {
+    var stmt = db.prepare("INSERT INTO oekaki_theme(name,labels_json) VALUES (?,?)");
+    stmt.run(name,labels_json, (err) => {
+      if(err) {
+        //**エラーレスポンス**//
+        //すでに存在するテーマだった
+        res.json("DUPLICATE")
+
+      }else res.json('OK')
+    });
+    stmt.finalize();
+  });
+
+  db.close();
+
+})
 app.post('/api/fetch/theme', async function(req, res) {
-  res.json({theme:await fetchOekakiTheme()})
+  res.json({theme:await fetchOekakiTheme(req.body.name)})
 })
 
 var server = app.listen(8080, function(){
@@ -121,7 +170,7 @@ var server = app.listen(8080, function(){
 });
 
 app.post('/game/change/state',(req,res) => {
-  
+
 })
 //ここまでhttpレスポンス処理//
 
