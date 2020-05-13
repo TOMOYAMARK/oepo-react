@@ -416,7 +416,7 @@ class OekakiScreen extends React.Component{
     }
     else if(msg.state === "theme-up"){
       //テーマを受け取る
-      let theme = msg.theme.name
+      let theme = msg.theme
       //テーマの表示
       this.showOekakiTheme(theme)
     }
