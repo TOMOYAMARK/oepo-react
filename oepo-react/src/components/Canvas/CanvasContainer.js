@@ -99,6 +99,7 @@ export class CanvasContainer extends React.Component {
           onChangeBackable={isAble => this.handleChangeBackable(isAble)}
           onChangeForwardable={isAble => this.handleChangeForwardable(isAble)}
           onResetInCv={e => this.handleResetInCv()}
+          onTurnEnd={img => this.props.onTurnEnd(img)}
         />
         <Palette
           state={this.state.state}

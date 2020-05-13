@@ -18,3 +18,7 @@ exports.GAMEWS = () => {
     if(debug) return "ws://" + localhost + ":" + gamews
     else      return "ws://" + IPAddres + ":" + gamews 
   }
+exports.CANVASWS = () => {
+  if(debug) return "ws://" + localhost + ":" + canvasws
+  else      return "ws://" + IPAddres + ":" + canvasws 
+}
