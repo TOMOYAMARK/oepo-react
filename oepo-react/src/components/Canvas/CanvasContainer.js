@@ -30,14 +30,14 @@ export class CanvasContainer extends React.Component {
   handleChangeWeight(e) {
     console.log('handle change weight : ' + e.target.value);
     this.setState({
-      weight: e.target.value,
+      weight: parseInt(e.target.value),
     });
   }
 
   handleChangeOpacity(e) {
     console.log('handle change opacity : ' + e.target.value);
     this.setState({
-      opacity: e.target.value,
+      opacity: parseFloat(e.target.value),
     });
   }
 

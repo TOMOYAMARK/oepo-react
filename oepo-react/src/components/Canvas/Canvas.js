@@ -5,6 +5,7 @@ export default class Canvas extends React.Component {
   constructor(props) {
     super(props);
     // 送信用のdraw処理
+    this.mainCvRef = React.createRef();
     this.onMouseMove = () => {};
     this.onMouseUp = () => {};
 
@@ -23,6 +24,8 @@ export default class Canvas extends React.Component {
       containerRef: React.createRef(),
       midLayerRef: React.createRef(),
       baseLayerRef: React.createRef(),
+      onPointer: false,
+      pointerPos: {x: 0, y:0,},
     }
   }
 
@@ -44,8 +47,8 @@ export default class Canvas extends React.Component {
   }
 
   componentDidUpdate() {
-    console.log('component did update');
-    console.log(this.props.palette.buttonState);
+    // console.log('component did update');
+    // console.log(this.props.palette.buttonState);
     if(this.props.palette.buttonState === "reset"){
       this.handleReset();
       this.props.onResetInCv();
@@ -87,6 +90,25 @@ export default class Canvas extends React.Component {
     this.state.layers.map(layer => {
       const ctx = layer.ref.current.getContext('2d');
       this.clearCanvas(ctx, 600, 500);
+    });
+  }
+
+  handlePointerEnter() {
+    this.setState({
+      onPointer: true,
+    });
+  }
+
+  handlePointerLeave() {
+    this.setState({
+      onPointer: false,
+    });
+  }
+
+  handlePointerMove(e) {
+    this.setState({
+      onPointer: this.state.onPointer ? this.state.onPointer : true,
+      pointerPos: {x: e.clientX, y:e.clientY,}
     });
   }
 
@@ -406,6 +428,12 @@ export default class Canvas extends React.Component {
   }
 
   render() {
+    const ref = this.mainCvRef.current;
+    const rect = ref ? ref.getBoundingClientRect() : null;
+    const pos = {
+      x: this.state.pointerPos.x - (ref ? rect.left : 0),
+      y: this.state.pointerPos.y - (ref ? rect.top : 0),
+    };
     const layers = this.state.layers.map((layer, idx) => {
       return (
         <canvas
@@ -442,11 +470,27 @@ export default class Canvas extends React.Component {
         <canvas
           width="600px"
           height="500px"
-          style={{position: 'absolute', top: 0, left: 0, zIndex: 8}}
+          style={{position: 'absolute', top: 0, left: 0, zIndex: 9, cursor: "none"}}
           onMouseMove={(e)=>this.onMouseMove(e)}
           onMouseDown={(e)=>this.handleMouseDown(e)}
           onMouseUp={(e)=>this.onMouseUp(e)}
+          onPointerEnter={() => this.handlePointerEnter()}
+          onPointerMove={e => this.handlePointerMove(e)}
+          onPointerLeave={() => this.handlePointerLeave()}
+          ref={this.mainCvRef}
         />
+        {
+          this.state.onPointer　&&
+          <div className='pointer' style={{
+            position: "absolute",
+            top: pos.y - this.props.palette.weight/2,
+            left: pos.x - this.props.palette.weight/2,
+            width: this.props.palette.weight,
+            height: this.props.palette.weight,
+            backgroundColor: this.props.palette.color,
+            opacity: this.props.palette.opacity,
+          }}/>
+        } 
       </div>
     )
   }
