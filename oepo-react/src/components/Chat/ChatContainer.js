@@ -21,9 +21,21 @@ class ChatDisplay extends React.Component{
   render() {
     return (
       <div className="chat-disp" ref={this.ref}>
-        {this.props.msgQueue.map((item,i) => (
-          <p key={i}><span className="status-txt">{item.status.name}</span>:<span className="msg-txt">{item.body}</span> </p>
-        ))}
+        {this.props.msgQueue.map((item,i) => {
+          const style = {
+            color: item.status.id === '0721721' ? "darkcyan" : "black",
+          }
+          return (
+            <p key={i} style={style}>
+              <span className="status-txt">
+                {item.status.name}
+              </span>:
+              <span className="msg-txt">
+                {item.body}
+              </span>
+            </p>
+          )
+          })}
       </div>
     )
   }

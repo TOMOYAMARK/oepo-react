@@ -6,6 +6,8 @@ const roomStates = {
   DURATION:"duration",      //アニメーションの待ち時間とか。端的に言ってGAME中の無意味な時間。
 }
 
+const SERVER_ID = "0721721";
+
 //SQLiteをインポート。所定のディレクトリにdbファイルをつくる。
 const sqlite3 = require('sqlite3').verbose();
 const dbname = './database/app.db'
@@ -156,6 +158,7 @@ wschat.broadcast = function(data) {
 
 wschat.systemShout = function(msg){
   var data = JSON.stringify({ "status":{
+    id: SERVER_ID,
     name:"サーバー"
   }, "body": msg }) 
   wschat.broadcast(data)
