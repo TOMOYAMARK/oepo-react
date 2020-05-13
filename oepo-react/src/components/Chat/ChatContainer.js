@@ -7,6 +7,7 @@ import Input from '@material-ui/core/Input';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 
+const SERVER_ID = require('../../env.js').SERVER_ID;
 
 class ChatDisplay extends React.Component{
   constructor(props){
@@ -21,9 +22,21 @@ class ChatDisplay extends React.Component{
   render() {
     return (
       <div className="chat-disp" ref={this.ref}>
-        {this.props.msgQueue.map((item,i) => (
-          <p key={i}><span className="status-txt">{item.status.name}</span>:<span className="msg-txt">{item.body}</span> </p>
-        ))}
+        {this.props.msgQueue.map((item,i) => {
+          const style = {
+            color: item.status.id === SERVER_ID ? "darkcyan" : "black",
+          }
+          return (
+            <p key={i} style={style}>
+              <span className="status-txt">
+                {item.status.name}
+              </span>:
+              <span className="msg-txt">
+                {item.body}
+              </span>
+            </p>
+          )
+          })}
       </div>
     )
   }
