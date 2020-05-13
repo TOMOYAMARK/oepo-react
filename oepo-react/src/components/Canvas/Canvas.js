@@ -37,7 +37,8 @@ export default class Canvas extends React.Component {
   componentDidMount() {
     console.log('component did mount');
     // ソケット
-    this.webSocket = new WebSocket("ws://34.85.36.109:3001");
+    const address = require('../../env.js').CANVASWS();
+    this.webSocket = new WebSocket(address);
     this.webSocket.onmessage = (e => this.handleMessage(e));
     this.webSocket.onopen = (e => this.handleOpen(e));
   }
@@ -73,6 +74,22 @@ export default class Canvas extends React.Component {
     ctx.stroke();
   }
 
+  clearCanvas(ctx, width, height) {
+    ctx.clearRect(0, 0, width, height);
+  }
+
+  resetCanvas() {
+    const midCtx = this.state.midLayerRef.current.getContext('2d');
+    const baseCtx = this.state.baseLayerRef.current.getContext('2d');
+    // mid,baseLayer,layersの消去
+    this.clearCanvas(baseCtx, 600, 500);
+    this.clearCanvas(midCtx, 600, 500);
+    this.state.layers.map(layer => {
+      const ctx = layer.ref.current.getContext('2d');
+      this.clearCanvas(ctx, 600, 500);
+    });
+  }
+
   handleOpen(e) {
     console.log('handle open');
   }
@@ -85,6 +102,7 @@ export default class Canvas extends React.Component {
     const midLayerRef = this.state.midLayerRef;
     const baseLayerRef = this.state.baseLayerRef;
     const containerRef = this.state.containerRef;
+
     // ユーザーが 参加した とき
     if(usrAct.state == "join"){
       console.log('handle message : join');
@@ -114,7 +132,6 @@ export default class Canvas extends React.Component {
       users = users.map(user => user.id == usrAct.id ? newUser : user);
       imageQueue = newImageQueue;
     }
-
     // ペンが 移動した とき
     if(usrAct.state == "move"){
       console.log('handle message : move');
@@ -128,7 +145,6 @@ export default class Canvas extends React.Component {
       // users の更新
       users = users.map(user => user.id == usrAct.id ? newUser : user);
     }
-
     // ペンが 離された とき
     if(usrAct.state == "up"){
       console.log('handle message : up');
@@ -189,7 +205,6 @@ export default class Canvas extends React.Component {
       this.props.onChangeBackable(this.backable(imageQueue));
       this.props.onChangeForwardable(this.forwardable(imageQueue));
     }
-
     // ユーザーが 戻るボタンを押した とき
     if(usrAct.state == "back"){
       if(imageQueue.filter(img => img.id == usrAct.id && !img.hidden).length > 0){
@@ -222,7 +237,6 @@ export default class Canvas extends React.Component {
       this.props.onChangeBackable(this.backable(imageQueue));
       this.props.onChangeForwardable(this.forwardable(imageQueue));
     }
-
     // ユーザーが 進むボタンを押した とき
     if(usrAct.state == "forward"){
       console.log('handle message : forward');
@@ -257,27 +271,41 @@ export default class Canvas extends React.Component {
       this.props.onChangeBackable(this.backable(imageQueue));
       this.props.onChangeForwardable(this.forwardable(imageQueue));
     }
-
+    // ユーザーが 全消しボタンを押した とき
     if(usrAct.state == 'reset'){
       console.log('handle message : reset');
-      const containerCtx = containerRef.current.getContext('2d');
-      const midCtx = midLayerRef.current.getContext('2d');
-      const baseCtx = baseLayerRef.current.getContext('2d');
-
-      // baseLayerの消去
-      this.clearCanvas(baseCtx, 600, 500);
-      // midの消去
-      this.clearCanvas(midCtx, 600, 500);
-      // layersの消去
-      this.state.layers.map(layer => {
-        const ctx = layer.ref.current.getContext('2d');
-        this.clearCanvas(ctx, 600, 500);
-      });
-      // queueの消去
+      // キャンバスの状態を全てリセットする
+      this.resetCanvas();
+      // キューを消去する
       imageQueue = [];
       // マウス動いてる途中で全消しした場合
       this.onMouseMove = () => {};
       this.onMouseUp = () => {};
+    }
+    // ターンが終了したとき
+    if(usrAct.state == 'turn-end'){
+      // ctx の取得
+      const containerCtx = containerRef.current.getContext('2d');
+      const baseCtx = baseLayerRef.current.getContext('2d');
+      //// キャンバスの画像を取得する
+      // imgQueueをベースに描画する
+      imageQueue.map(image => {
+        if(image.hidden) return;
+        containerCtx.putImageData(image.image, 0, 0);
+        baseCtx.drawImage(containerRef.current, 0, 0);
+      });
+      // 描画中のレイヤーをベースに描画する
+      this.state.layers.map(layer => {
+        const ctx = layer.ref.current.getContext('2d');
+        baseCtx.drawImage(containerRef.current, 0, 0);
+      })
+      // 画像を保存する
+      const baseImage = baseCtx.getImageData(0, 0, 600, 500);
+      this.props.onTurnEnd(baseImage);
+      // キャンバスをリセットする
+      this.resetCanvas();
+      // キューを消去する
+      imageQueue = [];
     }
 
     this.setState({
@@ -345,10 +373,6 @@ export default class Canvas extends React.Component {
     this.onMouseUp = () => {};
 
     this.webSocket.send(JSON.stringify(json));
-  }
-
-  clearCanvas(ctx, width, height) {
-    ctx.clearRect(0, 0, width, height);
   }
 
   handleBack() {

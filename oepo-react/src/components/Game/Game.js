@@ -143,7 +143,8 @@ class OekakiScreen extends React.Component{
       turnNum:0,                      //何ターン目        
       theme:null,                     //テーマ  
       onCorrect:false,                //正解アニメーションのトリガー  
-      onThemeUp:false                 //テーマ表示のトリガー    
+      onThemeUp:false,                 //テーマ表示のトリガー    
+      imageResults: []                //リザルトに表示する画像
     }
   }
 
@@ -334,6 +335,15 @@ class OekakiScreen extends React.Component{
     this.setState({theme:null})
   }
 
+  handleTurnEnd(img) {
+    console.log('handle turn end');
+    const imageResults = [...this.state.imageResults, img];
+    this.setState({
+      imageResults: imageResults,
+    });
+    console.log(imageResults);
+  }
+
   render(){
     return (
       <div className="game-container">
@@ -348,6 +358,7 @@ class OekakiScreen extends React.Component{
           onCorrect={this.state.onCorrect}
           mainUsrId={this.props.user.id}
           users={this.state.users}
+          onTurnEnd={img => this.handleTurnEnd(img)}
         /> 
         <ChatContainer user={this.props.user}/>
 

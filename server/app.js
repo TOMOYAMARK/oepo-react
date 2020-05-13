@@ -186,6 +186,10 @@ wschat.on('connection', function(ws) {
                   "user_id":user.id
                 }
               }))
+              // // 画像を保存したりキャンバスを消去したりするイベントを発生
+              wscanvas.broadcast(JSON.stringify({
+                "state":"turn-end",
+              }))
 
             }
           }
