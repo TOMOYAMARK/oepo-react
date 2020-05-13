@@ -40,6 +40,7 @@ export default class Slider extends React.Component {
               ` width: ${this.props.weight}px;`,
               ` height: ${this.props.weight}px;`,
               ' border-radius: 50%;',
+              ' border: ' + (this.props.color === 'white' ? '1px solid' : '0px solid') + ';',
               ' background-color: ' + (this.props.color ? this.props.color : "black") + ";",
               ' opacity: ' + (this.props.opacity ? this.props.opacity : "1") + ";",
               ' cursor: pointer;',
