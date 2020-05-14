@@ -49,10 +49,49 @@ export function ShowTheme(trigger,theme) {
   )
 }
 
-//リザルトウィンドウを表示する
-export function ShowResult(trigger,onClickClose,historyPayload) {
+//リザルト用のお絵かき画像表示
+class ImageFrame extends React.Component {
 
-  console.log(historyPayload)
+  constructor(props){
+    super(props)
+
+    this.canvas = React.createRef()
+
+    this.state={
+      image:{},
+    }
+  }
+
+
+  componentDidMount() {
+
+    if(this.props.image!== undefined){
+    
+    const canvasInvisible=document.createElement('canvas');
+    canvasInvisible.width=this.props.image.width;
+    canvasInvisible.height=this.props.image.height
+
+    const scaleVal = this.props.width/this.props.image.width
+    const v_context = canvasInvisible.getContext('2d');
+    v_context.putImageData(this.props.image, 0, 0);
+    const context = this.canvas.current.getContext('2d');
+    context.scale(scaleVal, scaleVal);
+    context.drawImage(canvasInvisible, 0, 0);
+    }else {
+      this.canvas.current.width = this.props.width
+      this.canvas.current.height = this.props.height
+      const context = this.canvas.current.getContext('2d');
+      context.rect(0,0,this.props.width,this.props.height);
+      context.stroke();
+    }
+  }
+  render() {
+    return <canvas ref={this.canvas} />
+  }
+}
+
+//リザルトウィンドウを表示する
+export function ShowResult(trigger,onClickClose,historyPayload,images) {
 
   const turns = historyPayload.turns
   const idMap = historyPayload.idMap
@@ -67,24 +106,20 @@ export function ShowResult(trigger,onClickClose,historyPayload) {
     })
 
     return (
-    <p>{Object.values(drawer)}</p>
+    <span>{Object.values(drawer)}</span>
     )
   }
 
-  const turnComponents = turns.map(turn => 
+  const turnComponents = turns.map((turn,i) => 
     <div style={{float:"left"}}>
-    <Card style={{height:"150px",width:"200px",margin:"10px 50px"}}>
-      <CardContent >
-        <Typography gutterBottom>
-          お題:{turn.theme.name}
-        </Typography>
-        書き手:{renderDrawer(turn.playerRole)}
+      <p style={{fontSize:"10px",marginBottom:"-2px"}}>
+        お題:{turn.theme.name}
+        <span style={{marginLeft:"10px"}}>書き手:{renderDrawer(turn.playerRole)}</span>
+      </p>
+    <div style={{height:"170px",width:"200px",margin:"5px 65px"}}>
 
-      </CardContent>
-      <CardActions>
-        <Button size="small" >拍手を送る</Button>
-      </CardActions>
-    </Card> 
+        <ImageFrame width={200} height={167} image={images[i]}/>
+    </div> 
     </div>
   )
   return (
@@ -99,14 +134,14 @@ export function ShowResult(trigger,onClickClose,historyPayload) {
         right:0,
         margin : "auto",
     }}>
-      <Card style={{height:"450px",width:"650px"}}>
+      <Card style={{height:"500px",width:"700px"}}>
         <CardContent>
           <Typography gutterBottom>
             結果発表
           </Typography>
 
           <div style={{
-            width:"620px",height:"350px",position:"relative"
+            width:"700px",height:"350px",position:"relative"
             }}>
               {turnComponents}
           </div>
