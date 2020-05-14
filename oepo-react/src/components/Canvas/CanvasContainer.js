@@ -3,7 +3,8 @@ import './Canvas.scss'
 import style from '../_variables.scss'
 import Canvas from './Canvas';
 import Palette from '../Palette/Palette';
-import {CorrectAnimation} from '../../utils/animation'
+import {CorrectAnimation, ShowTheme,ShowResult} from '../../utils/animation'
+
 
 export class CanvasContainer extends React.Component {
   constructor(props){
@@ -30,14 +31,14 @@ export class CanvasContainer extends React.Component {
   handleChangeWeight(e) {
     console.log('handle change weight : ' + e.target.value);
     this.setState({
-      weight: e.target.value,
+      weight: parseInt(e.target.value),
     });
   }
 
   handleChangeOpacity(e) {
     console.log('handle change opacity : ' + e.target.value);
     this.setState({
-      opacity: e.target.value,
+      opacity: parseFloat(e.target.value),
     });
   }
 
@@ -90,7 +91,6 @@ export class CanvasContainer extends React.Component {
 
   render(){
 
-    console.log(this.props.onCorrect)
     return(
       <div className="canvas-container">
         <Canvas 
@@ -102,6 +102,7 @@ export class CanvasContainer extends React.Component {
           onTurnEnd={img => this.props.onTurnEnd(img)}
         />
         <Palette
+
           state={this.state.state}
           weight={this.state.weight}
           opacity={this.state.opacity}
@@ -119,6 +120,7 @@ export class CanvasContainer extends React.Component {
         />
 
         {CorrectAnimation(this.props.onCorrect)}
+        {ShowResult(this.props.onGameFinished,() => this.props.closeResultWindow(),this.props.gameHistory)}
       </div>
     )
   }
