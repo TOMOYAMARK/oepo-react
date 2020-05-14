@@ -1,0 +1,84 @@
+{
+  "idMap": {
+    "650448770": {
+      "id": "650448770",
+      "name": "JKニキ"
+    },
+    "000000000": {
+      "id": "000000000",
+      "name": "makutomoya"
+    }
+  },
+  "turns": [
+    {
+      "playerRole": {
+        "650448770": "draw",
+        "000000000": "answer"
+      },
+      "theme": {
+        "name": "犬",
+        "labels_json": "[\"いぬ\"]"
+      },
+      "themeLabels": [
+        "いぬ"
+      ],
+      "correctPlayer": {
+        "id": "000000000",
+        "name": "makutomoya"
+      }
+    },
+    {
+      "playerRole": {
+        "650448770": "answer",
+        "000000000": "draw"
+      },
+      "theme": {
+        "name": "おにぎり",
+        "labels_json": "[\"おにぎり\",\"にぎりめし\",\"おむすび\"]"
+      },
+      "themeLabels": [
+        "おにぎり",
+        "にぎりめし",
+        "おむすび"
+      ],
+      "correctPlayer": {
+        "id": "650448770",
+        "name": "JKニキ"
+      }
+    },
+    {
+      "playerRole": {
+        "650448770": "answer",
+        "000000000": "draw"
+      },
+      "theme": {
+        "name": "犬",
+        "labels_json": "[\"いぬ\"]"
+      },
+      "themeLabels": [
+        "いぬ"
+      ],
+      "correctPlayer": {
+        "id": "650448770",
+        "name": "JKニキ"
+      }
+    },
+    {
+      "playerRole": {
+        "650448770": "answer",
+        "000000000": "draw"
+      },
+      "theme": {
+        "name": "リンゴ",
+        "labels_json": "[\"りんご\"]"
+      },
+      "themeLabels": [
+        "りんご"
+      ],
+      "correctPlayer": {
+        "id": "650448770",
+        "name": "JKニキ"
+      }
+    }
+  ]
+}
