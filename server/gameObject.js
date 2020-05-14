@@ -26,7 +26,6 @@ class Game {
     this.playerIDs = playerIDs
     this.connects = connects
     this.mode = mode //!!for now
-
     this.track = []                   //ターンの履歴→turnの配列
     this.waiting = {}                 //準備ができているユーザ
     this.currentTurn = null           //現在のターン情報
@@ -99,10 +98,13 @@ class Game {
   }
 
   terminate(){
-    //ゲーム終了〜。ゲームの履歴情報も一緒に送ることになるかも
+    //ゲーム終了〜。ゲームの履歴情報も一緒に送る
+    let historyPayload = {}
+    historyPayload.idMap = this.playerIDs
+    historyPayload.turns = this.track
     broadcast(this.connects,JSON.stringify({
       "state":"game-finished",
-      "track":this.track
+      "historyPayload":historyPayload,
     }))
   }
 

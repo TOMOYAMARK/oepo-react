@@ -9,6 +9,8 @@ import {CanvasContainer} from '../Canvas/CanvasContainer'
 import {ControlPanel} from '../ControlPanel/ControlPanel'
 import Slide from '@material-ui/core/Slide';
 
+import resultData from '../../utils/result.json'
+
 
 
 
@@ -32,7 +34,6 @@ async function fetchOekakiTheme(name){
     return theme
 }
 
-
 //
 //お絵かき画面（ゲーム画面)のcontainer
 //
@@ -53,7 +54,11 @@ export class OekakiScreen extends React.Component{
       onCorrect:false,                //正解アニメーションのトリガー  
       onGameFinished:false,           //リザルト表示のトリガー
       onThemeUp:false,                 //テーマ表示のトリガー    
-      imageResults: []                //リザルトに表示する画像
+      imageResults: [],                //リザルトに表示する画像
+      gameHistory:{                   //リザルトに表示するゲーム履歴
+        turns:[],
+        idMap:{},
+      },                  
     }
   }
 
@@ -160,10 +165,10 @@ export class OekakiScreen extends React.Component{
     }
     else if(msg.state === "game-finished"){
       //ゲームが終了しました。
-      //効果音を鳴らします。
-      this.props.makeSound(SE.GameFinished)
+
+      //ゲーム履歴のデータを取得
       //ゲーム終了アニメーションを起動します。(リザルトウィンドウの表示)
-      this.showResult()
+      this.showResult(msg.historyPayload)
 
       users = users.map(user => {
         user.role = 'drawer'      //!!キャンバスにかけるようにdrawerをデフォルトにするか
@@ -217,7 +222,8 @@ export class OekakiScreen extends React.Component{
     setTimeout(() => this.setState({onCorrect:false}),1000)
   }
 
-  showResult(){
+  showResult(historyPayload){
+    this.setState({gameHistory:historyPayload})
     this.props.makeSound(SE.GameFinished)
     this.setState({onGameFinished:true})
   }
@@ -261,10 +267,14 @@ export class OekakiScreen extends React.Component{
     
         <CanvasContainer
           onCorrect={this.state.onCorrect}
-          onFinished={this.state.onGameFinished}
+          onGameFinished={this.state.onGameFinished}
+          gameHistory={this.state.gameHistory}
           mainUsrId={this.props.user.id}
           users={this.state.users}
           onTurnEnd={img => this.handleTurnEnd(img)}
+          closeResultWindow={() => {
+            this.setState({onGameFinished:false})
+          }}
         /> 
         <ChatContainer user={this.props.user}/>
 
@@ -273,6 +283,7 @@ export class OekakiScreen extends React.Component{
         showOekakiTheme={() => this.showOekakiTheme()} users={this.state.users}
         turnNum = {this.state.turnNum}
         correct = {() => this.showCorrect()}
+        showResult = {() => this.showResult(resultData)}
          />
 
       </div>

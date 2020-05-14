@@ -62,8 +62,8 @@ export class LobbyScreen extends React.Component{
     super(props)
 
     this.state = {
-      userName:"",
-      password:"",
+      userName:"makutomoya",
+      password:"0721",
       showPassword:false,
       errMsgUsername:"",
       errMsgPassword:"",
