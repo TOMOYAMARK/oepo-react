@@ -275,6 +275,7 @@ export class OekakiScreen extends React.Component{
           closeResultWindow={() => {
             this.setState({onGameFinished:false})
           }}
+          imageResults={this.state.imageResults}
         /> 
         <ChatContainer user={this.props.user}/>
 
