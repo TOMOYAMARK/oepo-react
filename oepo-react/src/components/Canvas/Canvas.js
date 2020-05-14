@@ -20,6 +20,7 @@ export default class Canvas extends React.Component {
       ],
       users: [],
       imageQueue: [],
+      strokeQueue: [],
       imageStack: [],
       containerRef: React.createRef(),
       midLayerRef: React.createRef(),
@@ -29,12 +30,12 @@ export default class Canvas extends React.Component {
     }
   }
 
-  backable(imageQueue) {
-    return imageQueue.filter(img => img.id == this.props.mainUsrId && !img.hidden).length > 0;
+  backable(queue) {
+    return queue.filter(obj => obj.id == this.props.mainUsrId && !obj.hidden).length > 0;
   }
 
-  forwardable(imageQueue) {
-    return imageQueue.filter(img => img.id == this.props.mainUsrId && img.hidden).length > 0; 
+  forwardable(queue) {
+    return queue.filter(obj => obj.id == this.props.mainUsrId && obj.hidden).length > 0; 
   }
 
   componentDidMount() {
@@ -65,32 +66,33 @@ export default class Canvas extends React.Component {
     }
   }
 
-  drawing(ref, start, end, palette){
-    const ctx = ref.current.getContext('2d');
-    ctx.lineWidth = palette.weight;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = palette.state == "erase" ? "white" : palette.color;
-    ctx.globalAlpha = palette.opacity;
-    ctx.beginPath();
-    ctx.moveTo(start.x, start.y);
-    ctx.lineTo(end.x, end.y);
-    ctx.stroke();
+  drawing(ref, stroke){
+    this.setContextPreference(ref, stroke);
+    this.drawingWithoutSetting(ref, stroke);
   }
 
-  clearCanvas(ctx, width, height) {
+  drawingWithoutSetting(ref, stroke){
+    const ctx = ref.current.getContext('2d');
+    ctx.stroke(stroke.path);
+  }
+
+  setContextPreference(ref, stroke){
+    const ctx = ref.current.getContext('2d');
+    ctx.lineCap = 'round';
+    ctx.lineWidth = stroke.palette.weight;
+    ctx.strokeStyle = stroke.palette.state == "erase" ? "white" : stroke.palette.color;
+    ctx.globalAlpha = stroke.palette.opacity;
+  }
+
+  clearCanvas(ref, width, height) {
+    const ctx = ref.current.getContext('2d');
     ctx.clearRect(0, 0, width, height);
   }
 
   resetCanvas() {
-    const midCtx = this.state.midLayerRef.current.getContext('2d');
-    const baseCtx = this.state.baseLayerRef.current.getContext('2d');
-    // mid,baseLayer,layersの消去
-    this.clearCanvas(baseCtx, 600, 500);
-    this.clearCanvas(midCtx, 600, 500);
-    this.state.layers.map(layer => {
-      const ctx = layer.ref.current.getContext('2d');
-      this.clearCanvas(ctx, 600, 500);
-    });
+    this.clearCanvas(this.state.midLayerRef, 600, 500);
+    this.clearCanvas(this.state.baseLayerRef, 600, 500);
+    this.state.layers.map(layer => this.clearCanvas(layer.ref, 600, 500));
   }
 
   handlePointerEnter() {
@@ -121,6 +123,7 @@ export default class Canvas extends React.Component {
     let layers = [...this.state.layers];
     let users = [...this.state.users];
     let imageQueue = [...this.state.imageQueue];
+    let strokeQueue = [...this.state.strokeQueue];
     const midLayerRef = this.state.midLayerRef;
     const baseLayerRef = this.state.baseLayerRef;
     const containerRef = this.state.containerRef;
@@ -128,171 +131,159 @@ export default class Canvas extends React.Component {
     // ユーザーが 参加した とき
     if(usrAct.state == "join"){
       console.log('handle message : join');
-      console.log(usrAct);
       // usersの追加
-      const user = {id: usrAct.data.id, layer: null, position: null};
+      const user = {id: usrAct.data.id, layer: null, stroke: null, position: null};
       users = users.some(usr => usr.id == user.id) ? [...users] : [...users, user];
     }
+
     // ユーザーが 退室した とき
     if(usrAct.state == "leave"){
       console.log('handle message : leave');
       // usersの削除
       users = users.filter(user => user.id != usrAct.id);
     }
+
     // ペンが 置かれた とき
     if(usrAct.state == "down"){
       console.log('handle message : down');
       // false の layer を取得
       const prevLayer = layers.find(layer => !layer.isDrawing);
+      // 新しい stroke を定義
+      const stroke = {id: usrAct.id, path: new Path2D(), palette: usrAct.palette, hidden: false};
+      // refにストロークの情報をセット
+      this.setContextPreference(prevLayer.ref, stroke);
       // 新しい layer と user の状態を定義
       const newLayer = {isDrawing: true, ref: prevLayer.ref};
-      const newUser = {id: usrAct.id, layer: newLayer, position: usrAct.position};
-      // hidden な image を消去した新しい imageQueue の状態を定義
-      const newImageQueue = imageQueue.filter(img => img.id != usrAct.id || (img.id == usrAct.id && !img.hidden));
+      const newUser = {id: usrAct.id, layer: newLayer, stroke: stroke, position: usrAct.position};
+      // hidden な stroke を消去した新しい strokeQueue の状態を定義
+      const newStrokeQueue = strokeQueue.filter(stroke => stroke.id != usrAct.id || (stroke.id == usrAct.id && !stroke.hidden));
       // layers と users と imageQueue の更新
       layers = layers.map(layer => layer.id == usrAct.id ? newLayer : layer);
       users = users.map(user => user.id == usrAct.id ? newUser : user);
-      imageQueue = newImageQueue;
+      // strokeQueue の更新
+      strokeQueue = newStrokeQueue;
     }
+
     // ペンが 移動した とき
     if(usrAct.state == "move"){
       console.log('handle message : move');
-      console.log(usrAct.id);
-      // ユーザーを取得
+      // ユーザーを取得 => 中のlayer.ref, position, とstroke.pathだけは変更あり
       const user = users.find(user => user.id == usrAct.id);
+      // ユーザーのストロークに線分を追加
+      const path = user.stroke.path;
+      path.moveTo(user.position.x, user.position.y);
+      path.lineTo(usrAct.position.x, usrAct.position.y);
       // user の ref へ描画
-      this.drawing(user.layer.ref, user.position, usrAct.position, usrAct.palette);
+      this.clearCanvas(user.layer.ref, 600, 500);
+      this.drawingWithoutSetting(user.layer.ref, user.stroke);
       // 新しいuserの状態を定義
-      const newUser = {id: usrAct.id, layer: user.layer, position: usrAct.position};
+      const newUser = {id: usrAct.id, layer: user.layer, stroke: user.stroke, position: usrAct.position};
       // users の更新
       users = users.map(user => user.id == usrAct.id ? newUser : user);
     }
+
     // ペンが 離された とき
     if(usrAct.state == "up"){
       console.log('handle message : up');
       // ユーザーを取得
       const user = users.find(user => user.id == usrAct.id);
-      // mid context, base context を取得
-      const midCtx = midLayerRef.current.getContext('2d');
-      const baseCtx = baseLayerRef.current.getContext('2d');
-      const containerCtx = containerRef.current.getContext('2d');
+      // userのストロークを更新する => 破壊的方法をしている??
+      const path = user.stroke.path;
+      path.moveTo(user.position.x, user.position.y);
+      path.lineTo(usrAct.position.x, usrAct.position.y);
       // ドローする
-      this.drawing(user.layer.ref, user.position, usrAct.position, usrAct.palette);
-      // 画像を取得する
-      const ctx = user.layer.ref.current.getContext('2d');
-      const image = ctx.getImageData(0, 0, 600, 500);
-      const imageData = {
-        id: user.id,
-        image: new ImageData(Uint8ClampedArray.from(image.data), 600, 500),
-        hidden: false,
-      };
+      this.clearCanvas(user.layer.ref);
+      this.drawingWithoutSetting(user.layer.ref, user.stroke);
       // userのlayerのcontextを初期化する
-      this.clearCanvas(ctx, 600, 500);
-      // キューの処理をする
-      if(imageQueue.length < 5){
-        // imageQueueを追加する
-        imageQueue = [...imageQueue, imageData];
+      this.clearCanvas(user.layer.ref, 600, 500);
+      // strokeQueue の処理
+      if(strokeQueue.length < 5){
+        // キューに追加
+        strokeQueue = [...strokeQueue, user.stroke];
         // midCtxに描画
-        imageQueue.map(image => {
-          if(image.hidden) return;
-          containerCtx.putImageData(image.image, 0, 0);
-          midCtx.drawImage(containerRef.current, 0, 0);
-        });
+        strokeQueue.map(stroke => {
+          if(!stroke.hidden) this.drawing(midLayerRef, stroke);
+        })
       }else{
-        // imageQueueを追加する
-        imageQueue = [...imageQueue, imageData];
+        // キューに追加
+        strokeQueue = [...strokeQueue, user.stroke];
         // baseの描画
-        if(!imageQueue[0].hidden){
-          containerCtx.putImageData(imageQueue[0].image, 0, 0);
-          baseCtx.drawImage(containerRef.current, 0, 0);
-        }
+        if(!strokeQueue[0].hidden)
+          this.drawing(baseLayerRef, strokeQueue[0]);
         // midの再描画
-        this.clearCanvas(midCtx, 600, 500);
-        const newImageQueue = imageQueue.filter(image => image !== imageQueue[0]);
-        newImageQueue.map(image => {
-          if(image.hidden) return;
-          containerCtx.putImageData(image.image, 0, 0);
-          midCtx.drawImage(containerRef.current, 0, 0);
-        });
-        // imageQueue の更新
-        imageQueue = newImageQueue;
+        this.clearCanvas(midLayerRef, 600, 500);
+        const newStrokeQueue = strokeQueue.filter(stroke => stroke !== strokeQueue[0]);
+        newStrokeQueue.map(stroke => {if(!stroke.hidden) this.drawing(midLayerRef, stroke);});
+        // strokeQueue の更新
+        strokeQueue = newStrokeQueue;
       }
       // 新しい layer と user の状態を定義
       const newLayer = {isDrawing: false, ref: user.layer.ref};
-      const newUser = {id: usrAct.id, layer: null, position: usrAct.position};
+      const newUser = {id: usrAct.id, layer: null, stroke: null, position: usrAct.position};
       // layers と users の更新 (layer.isDrawing=false, user.layer=null)
       layers = layers.map(layer => layer == user.layer ? newLayer : layer);
       users = users.map(user => user.id == usrAct.id ? newUser : user);
       // 戻る・進むボタンの処理
-      this.props.onChangeBackable(this.backable(imageQueue));
-      this.props.onChangeForwardable(this.forwardable(imageQueue));
+      this.props.onChangeBackable(this.backable(strokeQueue));
+      this.props.onChangeForwardable(this.forwardable(strokeQueue));
     }
+
     // ユーザーが 戻るボタンを押した とき
     if(usrAct.state == "back"){
-      if(imageQueue.filter(img => img.id == usrAct.id && !img.hidden).length > 0){
+      if(strokeQueue.filter(stroke => stroke.id == usrAct.id && !stroke.hidden).length > 0){
         console.log('handle message : back');
         const containerCtx = containerRef.current.getContext('2d');
         const midCtx = midLayerRef.current.getContext('2d');
         // imageQueueの要素を更新する
         let idx;
-        for(let i=imageQueue.length-1; i>=0; i--)
-          if(imageQueue[i].id == usrAct.id && !imageQueue[i].hidden){
+        for(let i=strokeQueue.length-1; i>=0; i--)
+          if(strokeQueue[i].id == usrAct.id && !strokeQueue[i].hidden){
             idx = i;
             break;
           }
-        const newImage = {id: imageQueue[idx].id, image: imageQueue[idx].image, hidden: true};
-        const newImageQueue = imageQueue.map(image => image === imageQueue[idx] ? newImage : image);
+        const newStroke = {...strokeQueue[idx], hidden: true};
+        const newStrokeQueue = strokeQueue.map(stroke => stroke === strokeQueue[idx] ? newStroke : stroke);
         // midの再描画
-        this.clearCanvas(midCtx, 600, 500);
-        newImageQueue.map(image => {
-          if(image.hidden) return;
-          containerCtx.putImageData(image.image, 0, 0);
-          midCtx.drawImage(containerRef.current, 0, 0);
-        });
-        console.log(newImageQueue)
-        imageQueue = newImageQueue;
+        this.clearCanvas(midLayerRef, 600, 500);
+        newStrokeQueue.map(stroke => { if(!stroke.hidden) this.drawing(midLayerRef, stroke);});
+        strokeQueue = newStrokeQueue;
       } else {
         console.log('debug')
       }
 
       // 戻る・進むボタンの処理
-      this.props.onChangeBackable(this.backable(imageQueue));
-      this.props.onChangeForwardable(this.forwardable(imageQueue));
+      this.props.onChangeBackable(this.backable(strokeQueue));
+      this.props.onChangeForwardable(this.forwardable(strokeQueue));
     }
+
     // ユーザーが 進むボタンを押した とき
     if(usrAct.state == "forward"){
       console.log('handle message : forward');
 
-      if(imageQueue.filter(img => img.id == usrAct.id && img.hidden).length > 0){
+      if(strokeQueue.filter(stroke => stroke.id == usrAct.id && stroke.hidden).length > 0){
         console.log('handle message : back');
-        const containerCtx = containerRef.current.getContext('2d');
-        const midCtx = midLayerRef.current.getContext('2d');
         // imageQueueの要素を更新する
         let idx;
-        for(let i=0; i<imageQueue.length; i++)
-          if(imageQueue[i].id == usrAct.id && imageQueue[i].hidden){
+        for(let i=0; i<strokeQueue.length; i++)
+          if(strokeQueue[i].id == usrAct.id && strokeQueue[i].hidden){
             idx = i;
             break;
           }
-        const newImage = {id: imageQueue[idx].id, image: imageQueue[idx].image, hidden: false};
-        const newImageQueue = imageQueue.map(image => image === imageQueue[idx] ? newImage : image);
+          const newStroke = {...strokeQueue[idx], hidden: false};
+          const newStrokeQueue = strokeQueue.map(stroke => stroke === strokeQueue[idx] ? newStroke : stroke);
         // midの再描画
-        this.clearCanvas(midCtx, 600, 500);
-        newImageQueue.map(image => {
-          if(image.hidden) return;
-          containerCtx.putImageData(image.image, 0, 0);
-          midCtx.drawImage(containerRef.current, 0, 0);
-        });
-        console.log(newImageQueue)
-        imageQueue = newImageQueue;
+        this.clearCanvas(midLayerRef, 600, 500);
+        newStrokeQueue.map(stroke => { if(!stroke.hidden) this.drawing(midLayerRef, stroke);});
+        strokeQueue = newStrokeQueue;
       } else {
         console.log('debug')
       }
 
       // 戻る・進むボタンの処理
-      this.props.onChangeBackable(this.backable(imageQueue));
-      this.props.onChangeForwardable(this.forwardable(imageQueue));
+      this.props.onChangeBackable(this.backable(strokeQueue));
+      this.props.onChangeForwardable(this.forwardable(strokeQueue));
     }
+
     // ユーザーが 全消しボタンを押した とき
     if(usrAct.state == 'reset'){
       console.log('handle message : reset');
@@ -303,37 +294,39 @@ export default class Canvas extends React.Component {
       // マウス動いてる途中で全消しした場合
       this.onMouseMove = () => {};
       this.onMouseUp = () => {};
+      // 戻る・進むボタンの処理
+      this.props.onChangeBackable(this.backable(strokeQueue));
+      this.props.onChangeForwardable(this.forwardable(strokeQueue));
+      // リレンダー
+      this.props.onResetInCv();
     }
+
     // ターンが終了したとき
     if(usrAct.state == 'turn-end'){
       // ctx の取得
-      const containerCtx = containerRef.current.getContext('2d');
       const baseCtx = baseLayerRef.current.getContext('2d');
       //// キャンバスの画像を取得する
       // imgQueueをベースに描画する
-      imageQueue.map(image => {
-        if(image.hidden) return;
-        containerCtx.putImageData(image.image, 0, 0);
-        baseCtx.drawImage(containerRef.current, 0, 0);
-      });
+      strokeQueue.map(stroke => { if(!stroke.hidden) this.drawing(baseLayerRef, stroke); });
       // 描画中のレイヤーをベースに描画する
-      this.state.layers.map(layer => {
-        const ctx = layer.ref.current.getContext('2d');
-        baseCtx.drawImage(containerRef.current, 0, 0);
-      })
+      this.state.layers.map(layer => baseCtx.drawImage(containerRef.current, 0, 0));
       // 画像を保存する
       const baseImage = baseCtx.getImageData(0, 0, 600, 500);
       this.props.onTurnEnd(baseImage);
       // キャンバスをリセットする
       this.resetCanvas();
       // キューを消去する
-      imageQueue = [];
+      strokeQueue = [];
+      // 戻る・進むボタンの処理
+      this.props.onChangeBackable(this.backable(strokeQueue));
+      this.props.onChangeForwardable(this.forwardable(strokeQueue));
     }
 
     this.setState({
       layers: layers,
       users: users,
       imageQueue: imageQueue,
+      strokeQueue: strokeQueue,
       midLayerRef: midLayerRef,
       baseLayerRef: baseLayerRef,
     });
