@@ -10,7 +10,7 @@
   height:$controlPanelHeight;
 
   .users-container{
-    background-color: green;
+    background-color: #EEEEEE;
     width:calc(#{$userPanelWidth} * #{$roomCapacity});
   }
   .user-panel{

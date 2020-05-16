@@ -10,6 +10,7 @@ import DoneIcon from '@material-ui/icons/Done';
 import EditIcon from '@material-ui/icons/Edit';
 import ChatBubbleIcon from '@material-ui/icons/ChatBubble';
 import Paper from '@material-ui/core/Paper';
+import Grow from '@material-ui/core/Grow';
 
 
 class StatusChip extends React.Component{
@@ -64,7 +65,7 @@ export class ControlPanel extends React.Component{
     return (
       <div className="control-panel">
         <Grid container>
-          <div className="users-container">
+          <Paper className="users-container">
             {this.props.users.map((user,i) => (
               <Paper key={i} className="user-panel" >
 
@@ -72,8 +73,9 @@ export class ControlPanel extends React.Component{
                   <StatusChip status={user.role}/>
                 </div>
 
+                
                 <div className="score-board">
-                  256
+                    {0}
                 </div>
 
                 <div className="username">
@@ -82,7 +84,7 @@ export class ControlPanel extends React.Component{
 
               </Paper>
             ))}
-          </div>
+          </Paper>
           <div className="controller">
             <button onClick={() => this.props.showOekakiTheme()}>テーマを表示</button>
             <button onClick={() => this.props.startGame()}>準備完了</button>
