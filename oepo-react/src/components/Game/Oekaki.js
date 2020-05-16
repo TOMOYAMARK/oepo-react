@@ -123,6 +123,12 @@ export class OekakiScreen extends React.Component{
     else if(msg.state === "game-start"){
       //ゲーム開始
       this.setState({gameState:this.gameStates.GAME})
+      //スコアの初期化
+      users = users.map(user => {
+        user.score = 0
+        return user
+      })
+      this.setState({users:users})
       //効果音
       this.props.makeSound(SE.Hajime)
     }
@@ -149,6 +155,14 @@ export class OekakiScreen extends React.Component{
 
       //正解アニメーションを起動します
       this.showCorrect()
+
+      //スコアの加点処理
+      var additional_score = msg.params.additional_score
+      users = users.map(user => {
+        user.score += additional_score[user.id]
+        return user
+      })
+
 
       //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
       var msgSending = {
@@ -255,6 +269,19 @@ export class OekakiScreen extends React.Component{
     console.log(imageResults);
   }
 
+  addPoints(point){
+    //テスト用ポイント加算処理
+    var users = this.state.users.slice()
+    users = users.map(user => {
+      if(user.score === undefined) user.score = 0
+      user.score += point
+      return user
+    })
+
+    this.setState({users:users})
+
+  }
+
   render(){
     return (
       <div className="game-container">
@@ -285,6 +312,7 @@ export class OekakiScreen extends React.Component{
         turnNum = {this.state.turnNum}
         correct = {() => this.showCorrect()}
         showResult = {() => this.showResult(resultData)}
+        addPoints = {() => this.addPoints(10)}
          />
 
       </div>

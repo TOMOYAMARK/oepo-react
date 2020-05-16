@@ -11,6 +11,8 @@ import EditIcon from '@material-ui/icons/Edit';
 import ChatBubbleIcon from '@material-ui/icons/ChatBubble';
 import Paper from '@material-ui/core/Paper';
 import Grow from '@material-ui/core/Grow';
+import { CSSTransition, TransitionGroup } from "react-transition-group";
+
 
 
 class StatusChip extends React.Component{
@@ -52,6 +54,34 @@ class StatusChip extends React.Component{
   }
 }
 
+class UserScore extends React.Component{
+  constructor(props){
+    super(props)
+
+    this.state ={
+      score:0
+    }
+  }
+
+
+  render(){
+
+    return(
+      <TransitionGroup>
+        <CSSTransition
+          key={this.props.score}
+          timeout={50}
+          classNames="messageout"
+        >
+          <div style={{ marginTop: 20 }}>
+            {this.props.score}
+          </div>
+        </CSSTransition>
+      </TransitionGroup>
+    )
+  }
+}
+
 export class ControlPanel extends React.Component{
 
   constructor(props){
@@ -73,9 +103,8 @@ export class ControlPanel extends React.Component{
                   <StatusChip status={user.role}/>
                 </div>
 
-                
                 <div className="score-board">
-                    {0}
+                    <UserScore score={user.score}/>
                 </div>
 
                 <div className="username">
@@ -86,10 +115,15 @@ export class ControlPanel extends React.Component{
             ))}
           </Paper>
           <div className="controller">
+            <div>
             <button onClick={() => this.props.showOekakiTheme()}>テーマを表示</button>
             <button onClick={() => this.props.startGame()}>準備完了</button>
             <button onClick={() => this.props.correct()}>正解する</button>
             <button onClick={() => this.props.showResult()}>リザルトを表示する</button>
+            </div>
+            <div>
+            <button onClick={() => this.props.addPoints()}>ポイントを加算する</button>
+            </div>
             <p>ターン:{this.props.turnNum}</p>
             
           </div>
