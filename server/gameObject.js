@@ -1,8 +1,8 @@
 
 const roles = {
-  IDLE:"idle",
-  ANSWER:"answer",
-  DRAW:"draw",
+  IDLE:"IDLE",
+  ANSWER:"ANSWER",
+  DRAW:"DRAW",
 }
 
 class Turn {
@@ -126,6 +126,16 @@ class Game {
       if(count++ === drawerIndex) roleMap[pid] = roles.DRAW   //!! for now
     }
     return roleMap
+  }
+
+  calculateCurrentAdditionalScore(){
+    //現在のターンでの加点を計算、返す
+    var additional_score = {}
+    Object.keys(this.currentTurn.playerRole).map(id => {
+      additional_score[id] = 10
+    })
+
+    return additional_score
   }
 }
 

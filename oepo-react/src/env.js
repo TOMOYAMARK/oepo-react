@@ -1,8 +1,8 @@
 
 
-const debug = false                //true -> wsをすべてlocalhostに
+const debug = true                //true -> wsをすべてlocalhostに
 
-const IPAddres = "34.85.36.109"
+const IPAddres = "35.213.0.125"
 const localhost = "localhost"
 
 exports.SERVER_ID = "0721721"
