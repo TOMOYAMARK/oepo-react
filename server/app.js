@@ -235,7 +235,8 @@ wschat.on('connection', function(ws) {
               wsgame.broadcast(JSON.stringify({
                 "state":"user-answered",
                 "params":{
-                  "user_id":user.id
+                  "user_id":user.id,
+                  "additional_score":game.calculateCurrentAdditionalScore()
                 }
               }))
               // // 画像を保存したりキャンバスを消去したりするイベントを発生

@@ -127,6 +127,16 @@ class Game {
     }
     return roleMap
   }
+
+  calculateCurrentAdditionalScore(){
+    //現在のターンでの加点を計算、返す
+    var additional_score = {}
+    Object.keys(this.currentTurn.playerRole).map(id => {
+      additional_score[id] = 10
+    })
+
+    return additional_score
+  }
 }
 
 //wsマップを元にbroadcast
