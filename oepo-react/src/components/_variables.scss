@@ -11,6 +11,9 @@ $roomCapacity : 5;
 $canvasContainerWidth : $gameWidth * 0.7;
 $canvasContainerHeight : $gameHeight * 0.7;
 
+$controlPanelHeight : $gameHeight * 0.3;
+$userPanelWidth:$gameWidth/8;
+
 :export{
   gameWidth:$gameWidth;
   gameHeight:$gameHeight;
@@ -21,4 +24,6 @@ $canvasContainerHeight : $gameHeight * 0.7;
   chatWidth:$chatWidth;
   chatHeight:$chatHeight;
   roomCapacity:$roomCapacity;
+  controlPanelHeight:$controlPanelHeight;
+  userPanelWidth:$userPanelWidth;
 }

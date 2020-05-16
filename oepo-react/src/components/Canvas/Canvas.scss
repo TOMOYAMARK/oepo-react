@@ -8,6 +8,7 @@
   background-color: grey;
   width: $canvasContainerWidth;
   height: $canvasContainerHeight;
+  z-index: 1;
 }
 
 .canvas {
