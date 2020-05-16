@@ -115,7 +115,7 @@ export class OekakiScreen extends React.Component{
     }
     else if(msg.state === "game-ready"){
       users.map(user => {
-        if(msg.user_id === user.id) user.role = 'ready' //!!role...?
+        if(msg.user_id === user.id) user.role = 'READY' //!!role...?
         return user
       })
       this.setState({users:users})

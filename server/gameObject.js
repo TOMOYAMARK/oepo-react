@@ -1,8 +1,8 @@
 
 const roles = {
-  IDLE:"idle",
-  ANSWER:"answer",
-  DRAW:"draw",
+  IDLE:"IDLE",
+  ANSWER:"ANSWER",
+  DRAW:"DRAW",
 }
 
 class Turn {

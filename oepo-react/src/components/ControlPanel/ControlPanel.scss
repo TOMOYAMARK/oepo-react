@@ -1,24 +1,49 @@
 @import "../_variables";
 
-$panelHeight:calc(#{$gameHeight} * 0.3);
 
-$userPanelWidth:$gameWidth/8;
 
 .control-panel{
   clear: left;
   background-color:wheat;
+
   width:$gameWidth;
-  height:$panelHeight;
+  height:$controlPanelHeight;
 
   .users-container{
     background-color: green;
     width:calc(#{$userPanelWidth} * #{$roomCapacity});
   }
   .user-panel{
-    background-color: red;
-    border: 1px solid pink;
+    background-color:white;
     width:$userPanelWidth;
-    height:$panelHeight;
+    height:$controlPanelHeight;
     float:left;
+    position:relative;
+
+    .status-container{
+      height:50px;
+      width: $userPanelWidth;
+    }
+
+    .score-board{
+      height:60px;
+      width:$userPanelWidth;
+      position: absolute;
+      font-size: 3em;
+      font-weight: bold;
+      bottom:0px;
+      top:0px;
+      right:0px;
+      left:0px;
+      margin:auto;
+    }
+
+    .username{
+      position:absolute;
+      bottom:0px;
+      right:0px;
+      left:0px;
+      margin : 10px auto;
+    }
   }
 }
