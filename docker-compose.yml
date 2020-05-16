@@ -6,6 +6,7 @@ services:
     container_name: localws
     volumes:
       - ./server:/app
+      - ./database:/database
     working_dir: /app
     ports:
       - 3000:3000

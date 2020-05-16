@@ -120,7 +120,7 @@ export class CanvasContainer extends React.Component {
         />
 
         {CorrectAnimation(this.props.onCorrect)}
-        {ShowResult(this.props.onGameFinished,() => this.props.closeResultWindow(),this.props.gameHistory)}
+        {ShowResult(this.props.onGameFinished,() => this.props.closeResultWindow(),this.props.gameHistory,this.props.imageResults)}
       </div>
     )
   }
