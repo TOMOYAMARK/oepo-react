@@ -10,7 +10,7 @@ const SERVER_ID = "0721721";
 
 //SQLiteをインポート。所定のディレクトリにdbファイルをつくる。
 const sqlite3 = require('sqlite3').verbose();
-const dbname = './database/app.db'
+const dbname = '/database/app.db'
 //!!sqlite標準の関数群が非同期処理(コールバック)なのでPromise化した関数でラッピングしたもの（動作未確認）!!//
 /*function get(sql, params) {
 	return new Promise((resolve, reject) => {
