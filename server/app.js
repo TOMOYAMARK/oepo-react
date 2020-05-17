@@ -235,6 +235,7 @@ wschat.on('connection', function(ws) {
               wsgame.broadcast(JSON.stringify({
                 "state":"user-answered",
                 "params":{
+                  "theme":game.getCurrentTheme(),
                   "user_id":user.id,
                   "additional_score":game.calculateCurrentAdditionalScore()
                 }

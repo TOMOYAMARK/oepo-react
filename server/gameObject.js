@@ -137,6 +137,13 @@ class Game {
 
     return additional_score
   }
+
+  //ユーザが回答したときに、そのテーマをブロードキャストするときに使う。
+  getCurrentTheme(){
+    console.log("answering")
+    return this.currentTurn.theme
+  }
+
 }
 
 //wsマップを元にbroadcast
