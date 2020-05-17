@@ -261,10 +261,24 @@ wscanvas.broadcast = function(data) {
     });
 };
 
+const Canvas = require('./Canvas.js');
+const canvas = new Canvas.Canvas();
+
+app.post('/api/canvas/join', (req, res) => {
+  res.json({
+    base64Img: canvas.base64Img,
+    strokes: JSON.stringify(canvas.strokesWithoutPath),
+  });
+});
+
 wscanvas.on('connection', function(ws) {
     ws.on('message', function(message) {
-        var now = new Date();
-        console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
+        // var now = new Date();
+        // console.log(now.toLocaleString() + ' Received: %s', JSON.stringify(message));
+
+        usrAct = JSON.parse(message);
+        canvas.addUsrAct(usrAct);
+
         wscanvas.broadcast(message);
     });
 

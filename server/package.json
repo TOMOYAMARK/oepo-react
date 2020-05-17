@@ -10,7 +10,9 @@
     "dependencies": {
         "bcrypt": "^4.0.1",
         "body-parser": "^1.19.0",
+        "canvas-5-polyfill": "^0.1.5",
         "express": "^4.17.1",
+        "path2d-polyfill": "^0.4.2",
         "sqlite3": "^4.2.0",
         "ws": "^7.2.1"
     }

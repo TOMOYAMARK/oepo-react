@@ -1,5 +1,6 @@
 import React from 'react';
 import './Canvas.scss';
+import axios from '../../utils/API';
 
 export default class Canvas extends React.Component {
   constructor(props) {
@@ -38,13 +39,63 @@ export default class Canvas extends React.Component {
     return queue.filter(obj => obj.id == this.props.mainUsrId && obj.hidden).length > 0; 
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     console.log('component did mount');
     // ソケット
     const address = require('../../env.js').CANVASWS();
     this.webSocket = new WebSocket(address);
     this.webSocket.onmessage = (e => this.handleMessage(e));
     this.webSocket.onopen = (e => this.handleOpen(e));
+    // 描画状態を同期する
+    let canvasData;
+    await axios.post("/api/canvas/join")
+      .then(res => {
+        console.log(res.data);
+        canvasData = {
+          base64Img: res.data.base64Img,
+          strokes: JSON.parse(res.data.strokes),
+        }
+      })
+      .catch(() => console.log("エラー"));
+
+    // baseに描画する
+    const ctx = this.state.baseLayerRef.current.getContext('2d');
+    var img = new Image();
+    img.src = canvasData.base64Img;
+    img.onload = function(){
+      ctx.drawImage(img, 0, 0, 600, 500);
+    }
+
+    // ストロークキューに挿入する
+    // ストロークの変換
+    const strokes = canvasData.strokes.map(stroke => {
+      console.log(stroke);
+      const usrAct = JSON.parse(stroke.lastAct);
+      
+      if(usrAct){
+        if(usrAct.state === "move"){
+          const usrActJoin = {id:usrAct.id, state: "join"};
+          const usrActDown = {...usrAct, state: "down", base64Img: stroke.base64Img};
+          this.handleMessage(JSON.stringify(usrActJoin));
+          this.handleMessage(JSON.stringify(usrActDown));
+        }
+      }
+
+      return {
+        id: stroke.id,
+        palette: stroke.palette,
+        hidden: stroke.hidden,
+        base64Img: stroke.base64Img,
+        lastAct: JSON.parse(stroke.lastAct),
+      };
+    });
+
+     // midの再描画
+     this.clearCanvas(this.state.midLayerRef, 600, 500);
+     strokes.map(stroke => {if(!stroke.hidden) this.drawing(this.state.midLayerRef, stroke);});
+     this.setState({
+       strokeQueue: strokes,
+     });
   }
 
   componentDidUpdate() {
@@ -73,7 +124,15 @@ export default class Canvas extends React.Component {
 
   drawingWithoutSetting(ref, stroke){
     const ctx = ref.current.getContext('2d');
-    ctx.stroke(stroke.path);
+    if(stroke.base64Img){
+      var img = new Image();
+      img.src = stroke.base64Img;
+      img.onload = function(){
+        ctx.drawImage(img, 0, 0, 600, 500);
+      }
+    }else{
+      ctx.stroke(stroke.path);
+    }
   }
 
   setContextPreference(ref, stroke){
@@ -152,6 +211,11 @@ export default class Canvas extends React.Component {
       const stroke = {id: usrAct.id, path: new Path2D(), palette: usrAct.palette, hidden: false};
       // refにストロークの情報をセット
       this.setContextPreference(prevLayer.ref, stroke);
+      // ストロークにbase64Imgがあったら描画する
+      if(usrAct.base64Img){
+        const base64Stroke = {...stroke, base64Img: usrAct.base64Img};
+        this.drawing(prevLayer.ref, base64Stroke);  
+      }
       // 新しい layer と user の状態を定義
       const newLayer = {isDrawing: true, ref: prevLayer.ref};
       const newUser = {id: usrAct.id, layer: newLayer, stroke: stroke, position: usrAct.position};
