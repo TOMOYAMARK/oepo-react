@@ -16,7 +16,7 @@ class GameStateDisplay extends React.Component{
     super(props)
 
     this.state = {
-      count : undefined
+      count : undefined   //!!制限時間だけをここに初期化して、カウントダウンの処理をOekaki.jsから分離したい!!//
     }
   }
 
@@ -25,13 +25,13 @@ class GameStateDisplay extends React.Component{
       <Paper className="game-state-disp">
         <div className="count">
           <div className="count-txt">
-            {"250"}
+            {this.props.gameCount}
           </div>
         </div>
         <div className="turn">
-          {"ターン:0"}
+          {"ターン:" + this.props.turnNum}
         </div>
-        {"ここに制限時間と、ターン数とかを表示します。"}
+
       </Paper>
     )
   }
@@ -130,7 +130,10 @@ export class ChatContainer extends React.Component{
       <div className="chat-container">
 
 
-        <GameStateDisplay />
+        <GameStateDisplay 
+        gameCount={this.props.gameCount} 
+        turnNum={this.props.turnNum} 
+        />
 
         <ChatDisplay msgQueue={this.state.msgQueue}/>
         <Grid container>

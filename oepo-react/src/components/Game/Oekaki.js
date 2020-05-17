@@ -45,6 +45,7 @@ export class OekakiScreen extends React.Component{
       'GAME':1,
     }
 
+    this.gameTimer = undefined        //ターンの制限時間を管理するインターバル関数のid
     this.userMap = new Map([])        //ルーム内のユーザid->userオブジェクトの辞書
     this.duration = {
       onCorrect:4000,                  //正解時の待ち時間
@@ -66,7 +67,8 @@ export class OekakiScreen extends React.Component{
       answerParams:{
         answer:"サルバトール・ダリ",
         answerer:"makutomoya",
-      }              
+      },
+      gameCount:undefined,            //ゲーム中、ターンの時間制限管理 
     }
   }
 
@@ -96,6 +98,11 @@ export class OekakiScreen extends React.Component{
   }
 
 
+  //ターンの制限時間カウントを行うインターバル関数（1000ms毎)
+  countDown(){
+    var t = this.state.gameCount - 1
+    this.setState({gameCount:t})
+  }
 
   handleOnMessage(e){
     const json = e.data;
@@ -146,7 +153,12 @@ export class OekakiScreen extends React.Component{
     }
     else if(msg.state === "begin-turn"){
       //ターンの開始。各ユーザの役割とターン情報を反映。
-      this.setState({turnNum:msg.turn.num})
+      this.setState({gameCount:msg.turn.time,turnNum:msg.turn.num},
+        () => {
+          //カウントダウン開始
+          setInterval(() => this.countDown(),1000)
+        })
+
       let role = msg.turn.role
 
       users = users.map(user => {
@@ -174,6 +186,10 @@ export class OekakiScreen extends React.Component{
 
       //正解アニメーションを起動します
       this.showCorrect()
+
+      //タイマーの停止初期化
+      clearInterval(this.gameTimer)
+      this.setState({gameCount:undefined})
 
       //スコアの加点処理
       var additional_score = msg.params.additional_score
@@ -327,7 +343,11 @@ export class OekakiScreen extends React.Component{
           imageResults={this.state.imageResults}
           answerParams={this.state.answerParams}
         /> 
-        <ChatContainer user={this.props.user}/>
+        <ChatContainer 
+        user={this.props.user} 
+        gameCount={this.state.gameCount}
+        turnNum={this.state.turnNum}
+        />
 
         <ControlPanel 
         startGame={() => this.startGame()}

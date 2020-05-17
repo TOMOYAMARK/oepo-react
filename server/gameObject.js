@@ -11,6 +11,7 @@ class Turn {
     this.theme = theme                                      //テーマデータ
     this.themeLabels = JSON.parse(theme.labels_json)        //テーマの正解ラベルリスト(Array)
     this.correctPlayer = undefined                          //正解者
+    this.time = 200                                         //!!ターンの時間制限
   }
 }
 
@@ -67,6 +68,7 @@ class Game {
     const msg = {
       state:"begin-turn",
       turn:{
+        time:this.currentTurn.time,        //ターンの時間制限              
         num:this.track.length+1,          //何ターン目
         role:this.currentTurn.playerRole  //各プレイヤーの役割
       }
@@ -140,7 +142,6 @@ class Game {
 
   //ユーザが回答したときに、そのテーマをブロードキャストするときに使う。
   getCurrentTheme(){
-    console.log("answering")
     return this.currentTurn.theme
   }
 
