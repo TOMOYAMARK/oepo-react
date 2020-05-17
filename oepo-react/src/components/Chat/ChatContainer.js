@@ -6,6 +6,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
 
 const SERVER_ID = require('../../env.js').SERVER_ID;
 
@@ -15,15 +16,23 @@ class GameStateDisplay extends React.Component{
     super(props)
 
     this.state = {
-
+      count : undefined
     }
   }
 
   render(){
     return(
-      <div className="game-state-disp">
+      <Paper className="game-state-disp">
+        <div className="count">
+          <div className="count-txt">
+            {"250"}
+          </div>
+        </div>
+        <div className="turn">
+          {"ターン:0"}
+        </div>
         {"ここに制限時間と、ターン数とかを表示します。"}
-      </div>
+      </Paper>
     )
   }
 }
