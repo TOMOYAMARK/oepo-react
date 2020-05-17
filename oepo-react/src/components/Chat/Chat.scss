@@ -1,16 +1,28 @@
 @import "../_variables";
 
 
+$gameStatsDisplay:$chatContainerHeight/7;
+$chatWidth:$chatContainerWidth;
+$chatHeight:$chatContainerHeight - 50px - $gameStatsDisplay;
+
+
 .chat-container{
     float:left;
-    height:$chatHeight;
-    width:$chatWidth;
+    height:$chatContainerHeight;
+    width:$chatContainerWidth;
     background-color:#FFAAFF;
+
+    .game-state-disp{
+      height:$gameStatsDisplay;
+      width:$chatContainerWidth;
+      background-color: red;
+    }
 
     .chat-disp{
         text-align: left;
-        height:calc( #{$chatHeight} - 50px);
-        width:$chatWidth;
+        height:$chatHeight;
+        max-height: $chatHeight;
+        width:$chatContainerWidth;
         background-color: #FFFFAA;
 
         overflow-y:scroll;

@@ -9,6 +9,25 @@ import Button from '@material-ui/core/Button';
 
 const SERVER_ID = require('../../env.js').SERVER_ID;
 
+
+class GameStateDisplay extends React.Component{
+  constructor(props){
+    super(props)
+
+    this.state = {
+
+    }
+  }
+
+  render(){
+    return(
+      <div className="game-state-disp">
+        {"ここに制限時間と、ターン数とかを表示します。"}
+      </div>
+    )
+  }
+}
+
 class ChatDisplay extends React.Component{
   constructor(props){
     super(props);
@@ -101,12 +120,15 @@ export class ChatContainer extends React.Component{
     return (
       <div className="chat-container">
 
+
+        <GameStateDisplay />
+
         <ChatDisplay msgQueue={this.state.msgQueue}/>
         <Grid container>
           <FormControl
             className="txt-field"
             variant="outlined"
-            style={{width:`calc(${style.chatWidth} - 50px)`}}
+            style={{width:`calc(${style.chatContainerWidth} - 50px)`}}
             defaultValue=""
           >
             <Input
