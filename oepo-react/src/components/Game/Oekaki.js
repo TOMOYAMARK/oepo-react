@@ -101,6 +101,12 @@ export class OekakiScreen extends React.Component{
   //ターンの制限時間カウントを行うインターバル関数（1000ms毎)
   countDown(){
     var t = this.state.gameCount - 1
+
+    if(t === -1){
+      //時間切れ。カウントを止めます。
+      this.timeOver()
+      return
+    }
     this.setState({gameCount:t})
   }
 
@@ -156,7 +162,7 @@ export class OekakiScreen extends React.Component{
       this.setState({gameCount:msg.turn.time,turnNum:msg.turn.num},
         () => {
           //カウントダウン開始
-          setInterval(() => this.countDown(),1000)
+          this.gameTimer = setInterval(() => this.countDown(),1000)
         })
 
       let role = msg.turn.role
@@ -207,6 +213,26 @@ export class OekakiScreen extends React.Component{
       
       const json = JSON.stringify(msgSending)
 
+      //インターバル
+      setTimeout(() => {
+        //テーマをクリアして、準備完了！
+        this.initOekakiTheme()
+        this.webSocket.send(json)
+      },this.duration.turnInterval)
+
+    }
+    else if(msg.state === "turn-time-over"){
+      //時間切れの処理
+
+      //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
+      var msgSending = {
+        state:"req-next",
+        user_id:this.props.user.id
+      } 
+      
+      const json = JSON.stringify(msgSending)
+
+      console.log("turn finished")
       //インターバル
       setTimeout(() => {
         //テーマをクリアして、準備完了！
@@ -318,6 +344,20 @@ export class OekakiScreen extends React.Component{
 
     this.setState({users:users})
 
+  }
+
+  //時間オーバー処理
+  timeOver(){
+    //タイマーストップ。
+    clearInterval(this.gameTimer)
+    //時間制限がきたよーってサーバに伝える
+    var msgSending = {
+      state:"req-turn-over",
+      user_id:this.props.user.id
+    } 
+    const json = JSON.stringify(msgSending)
+    this.webSocket.send(json)
+    
   }
 
   render(){

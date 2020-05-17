@@ -381,6 +381,25 @@ wsgame.on('connection', function(ws) {
             }
           }
         }
+        else if(data.state == "req-turn-over"){
+          //!!本来ならばvoteの属性も衝突回避のためつけるべき!!//
+          let pid = data.user_id;
+          if(game.vote(pid)){
+            //全員が揃ったらターンを時間制限で終了
+
+            //時間制限。この直後回答は受け付けません.
+            roomState = roomStates.DURATION
+            //次ターンの (!!もしまだ続くのなら!!)
+            game.generateNextTurn(await fetchOekakiTheme())
+            wschat.systemShout(`時間切れ。 (答え:${game.getCurrentTheme().name})`)
+            wsgame.broadcast(JSON.stringify({
+              "state":"turn-time-over",
+              "params":{
+                "theme":game.getCurrentTheme(),
+              }
+            }))
+          }
+        }
         else if (data.state == "select-game-mode") {
             let sendData = JSON.stringify({ "state": "game-data", "data": data.data });
             let gameMode = "";
