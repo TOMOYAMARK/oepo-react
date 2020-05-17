@@ -6,8 +6,36 @@ import FormControl from '@material-ui/core/FormControl';
 import Input from '@material-ui/core/Input';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
 
 const SERVER_ID = require('../../env.js').SERVER_ID;
+
+
+class GameStateDisplay extends React.Component{
+  constructor(props){
+    super(props)
+
+    this.state = {
+      count : undefined   //!!制限時間だけをここに初期化して、カウントダウンの処理をOekaki.jsから分離したい!!//
+    }
+  }
+
+  render(){
+    return(
+      <Paper className="game-state-disp">
+        <div className="count">
+          <div className="count-txt">
+            {this.props.gameCount}
+          </div>
+        </div>
+        <div className="turn">
+          {"ターン:" + this.props.turnNum}
+        </div>
+
+      </Paper>
+    )
+  }
+}
 
 class ChatDisplay extends React.Component{
   constructor(props){
@@ -101,12 +129,18 @@ export class ChatContainer extends React.Component{
     return (
       <div className="chat-container">
 
+
+        <GameStateDisplay 
+        gameCount={this.props.gameCount} 
+        turnNum={this.props.turnNum} 
+        />
+
         <ChatDisplay msgQueue={this.state.msgQueue}/>
         <Grid container>
           <FormControl
             className="txt-field"
             variant="outlined"
-            style={{width:`calc(${style.chatWidth} - 50px)`}}
+            style={{width:`calc(${style.chatContainerWidth} - 50px)`}}
             defaultValue=""
           >
             <Input

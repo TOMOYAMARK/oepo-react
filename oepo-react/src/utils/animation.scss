@@ -1,0 +1,17 @@
+@import "../components/_variables";
+
+.answer-txt{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  margin:auto auto 90px auto;
+  width:$canvasWidth;
+  height:26px;
+  font-weight: bold;
+  font-size: 1.6em;
+  color: #FF6F00;
+  -webkit-text-stroke: 1px black;
+  text-stroke: 1px black;
+}
