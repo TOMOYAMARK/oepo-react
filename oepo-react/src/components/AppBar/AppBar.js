@@ -30,7 +30,7 @@ export class AppBar extends React.Component{
       <Paper>
         <div className="app-bar">
           <div className="theme-container">
-            {ShowTheme(this.props.onThemeUp,this.props.theme)}
+            {ShowTheme(this.props.onThemeUp,this.props.theme.name)}
           </div>
 
           <div className="icon">

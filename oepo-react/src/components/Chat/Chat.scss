@@ -1,16 +1,55 @@
 @import "../_variables";
 
 
+$gameStatsDisplayHeight:$chatContainerHeight/7;
+$chatWidth:$chatContainerWidth;
+$chatHeight:$chatContainerHeight - 50px - $gameStatsDisplayHeight;
+
+$countWidth:$chatContainerWidth / 3;
+
 .chat-container{
     float:left;
-    height:$chatHeight;
-    width:$chatWidth;
-    background-color:#FFAAFF;
+    height:$chatContainerHeight;
+    width:$chatContainerWidth;
+    background-color:white;
+
+    .game-state-disp{
+      height:$gameStatsDisplayHeight;
+      width:$chatContainerWidth;
+      background-color: #EEEEEE;
+
+      .count{
+        float:left;
+        width:$countWidth;
+        height:$gameStatsDisplayHeight;
+        position:relative;
+
+        .count-txt{
+          font-size: 2.4em;
+          width:$countWidth;
+          height:48px;
+          position:absolute;
+          top:0;
+          bottom:0;
+          left:0;
+          right:0;
+          margin: auto;
+        }
+      }
+
+      .turn{
+        float:left;
+        background-color: green;
+        width:calc(#{$chatWidth} - #{$countWidth});
+        height:$gameStatsDisplayHeight;
+      }
+    }
 
     .chat-disp{
         text-align: left;
-        height:calc( #{$chatHeight} - 50px);
-        width:$chatWidth;
+        height:$chatHeight;
+        max-height: $chatHeight;
+        width:$chatContainerWidth;
         background-color: #FFFFAA;
 
         overflow-y:scroll;

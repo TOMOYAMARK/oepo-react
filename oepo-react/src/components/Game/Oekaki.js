@@ -45,12 +45,17 @@ export class OekakiScreen extends React.Component{
       'GAME':1,
     }
 
-    this.userMap = new Map([])
+    this.gameTimer = undefined        //ターンの制限時間を管理するインターバル関数のid
+    this.userMap = new Map([])        //ルーム内のユーザid->userオブジェクトの辞書
+    this.duration = {
+      onCorrect:4000,                  //正解時の待ち時間
+      turnInterval:5000,               //次のターンへの移行の待ち時間
+    }
     this.state = {
       users:[],                       //ユーザオブジェクト(id,名前,役割,ステータス)の配列
       gameState:this.gameStates.IDLE, //ゲームの状態
       turnNum:0,                      //何ターン目        
-      theme:null,                     //テーマ  
+      theme:{},                       //テーマ  
       onCorrect:false,                //正解アニメーションのトリガー  
       onGameFinished:false,           //リザルト表示のトリガー
       onThemeUp:false,                 //テーマ表示のトリガー    
@@ -58,7 +63,12 @@ export class OekakiScreen extends React.Component{
       gameHistory:{                   //リザルトに表示するゲーム履歴
         turns:[],
         idMap:{},
-      },                  
+      },    
+      answerParams:{
+        answer:"サルバトール・ダリ",
+        answerer:"makutomoya",
+      },
+      gameCount:undefined,            //ゲーム中、ターンの時間制限管理 
     }
   }
 
@@ -88,6 +98,17 @@ export class OekakiScreen extends React.Component{
   }
 
 
+  //ターンの制限時間カウントを行うインターバル関数（1000ms毎)
+  countDown(){
+    var t = this.state.gameCount - 1
+
+    if(t === -1){
+      //時間切れ。カウントを止めます。
+      this.timeOver()
+      return
+    }
+    this.setState({gameCount:t})
+  }
 
   handleOnMessage(e){
     const json = e.data;
@@ -96,6 +117,8 @@ export class OekakiScreen extends React.Component{
     var users = this.state.users.slice()
     const user = msg.data
 
+    console.log(msg)
+
     if(msg.state === "player"){
       //部屋に参加しているプレイヤーの情報を順次反映
       if(!this.userMap.has(user.id)){
@@ -103,6 +126,8 @@ export class OekakiScreen extends React.Component{
         this.userMap.set(user.id,user)
         users.push(user)
       }
+
+      console.log(this.userMap)
       this.setState({users:users})
     }
     else if(msg.state === "leave-room"){
@@ -134,7 +159,12 @@ export class OekakiScreen extends React.Component{
     }
     else if(msg.state === "begin-turn"){
       //ターンの開始。各ユーザの役割とターン情報を反映。
-      this.setState({turnNum:msg.turn.num})
+      this.setState({gameCount:msg.turn.time,turnNum:msg.turn.num},
+        () => {
+          //カウントダウン開始
+          this.gameTimer = setInterval(() => this.countDown(),1000)
+        })
+
       let role = msg.turn.role
 
       users = users.map(user => {
@@ -147,14 +177,25 @@ export class OekakiScreen extends React.Component{
     else if(msg.state === "theme-up"){
       //テーマを受け取る
       let theme = msg.theme
+      this.setState({theme:theme})
       //テーマの表示
       this.showOekakiTheme(theme)
     }
     else if(msg.state === "user-answered"){
-      //ユーザが正解しました。正解者のuidも一緒。
+      //ユーザが正解しました。正解者のuidも一緒
+      var theme = msg.params.theme
+      var answerParams = {
+        answer:theme.name,
+        answerer:this.userMap.get(msg.params.user_id).name
+      }
+      this.setState({answerParams:answerParams})
 
       //正解アニメーションを起動します
       this.showCorrect()
+
+      //タイマーの停止初期化
+      clearInterval(this.gameTimer)
+      this.setState({gameCount:undefined})
 
       //スコアの加点処理
       var additional_score = msg.params.additional_score
@@ -170,12 +211,35 @@ export class OekakiScreen extends React.Component{
         user_id:this.props.user.id
       } 
       
-      console.log(msgSending)
       const json = JSON.stringify(msgSending)
 
-      //テーマをクリアして、準備完了！
-      this.initOekakiTheme()
-      this.webSocket.send(json)
+      //インターバル
+      setTimeout(() => {
+        //テーマをクリアして、準備完了！
+        this.initOekakiTheme()
+        this.webSocket.send(json)
+      },this.duration.turnInterval)
+
+    }
+    else if(msg.state === "turn-time-over"){
+      //時間切れの処理
+
+      //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
+      var msgSending = {
+        state:"req-next",
+        user_id:this.props.user.id
+      } 
+      
+      const json = JSON.stringify(msgSending)
+
+      console.log("turn finished")
+      //インターバル
+      setTimeout(() => {
+        //テーマをクリアして、準備完了！
+        this.initOekakiTheme()
+        this.webSocket.send(json)
+      },this.duration.turnInterval)
+
     }
     else if(msg.state === "game-finished"){
       //ゲームが終了しました。
@@ -233,7 +297,7 @@ export class OekakiScreen extends React.Component{
   showCorrect(){
     this.props.makeSound(SE.CorrectAnswer)
     this.setState({onCorrect:true})
-    setTimeout(() => this.setState({onCorrect:false}),1000)
+    setTimeout(() => this.setState({onCorrect:false}),this.duration.onCorrect)
   }
 
   showResult(historyPayload){
@@ -248,7 +312,7 @@ export class OekakiScreen extends React.Component{
     if(theme === undefined)
       theme = await fetchOekakiTheme() //!!テスト用のボタン用処理
   
-    this.setState({theme:theme.name})
+    this.setState({theme:theme})
 
     this.props.makeSound(SE.ThemeUp)
     this.setState({onThemeUp:true})
@@ -257,7 +321,7 @@ export class OekakiScreen extends React.Component{
   //テーマ初期化。コンポーネントを非表示に。
   initOekakiTheme(){
     this.setState({onThemeUp:false})
-    this.setState({theme:null})
+    this.setState({theme:{}})
   }
 
   handleTurnEnd(img) {
@@ -282,6 +346,20 @@ export class OekakiScreen extends React.Component{
 
   }
 
+  //時間オーバー処理
+  timeOver(){
+    //タイマーストップ。
+    clearInterval(this.gameTimer)
+    //時間制限がきたよーってサーバに伝える
+    var msgSending = {
+      state:"req-turn-over",
+      user_id:this.props.user.id
+    } 
+    const json = JSON.stringify(msgSending)
+    this.webSocket.send(json)
+    
+  }
+
   render(){
     return (
       <div className="game-container">
@@ -303,8 +381,13 @@ export class OekakiScreen extends React.Component{
             this.setState({onGameFinished:false})
           }}
           imageResults={this.state.imageResults}
+          answerParams={this.state.answerParams}
         /> 
-        <ChatContainer user={this.props.user}/>
+        <ChatContainer 
+        user={this.props.user} 
+        gameCount={this.state.gameCount}
+        turnNum={this.state.turnNum}
+        />
 
         <ControlPanel 
         startGame={() => this.startGame()}

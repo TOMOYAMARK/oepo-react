@@ -13,27 +13,41 @@ import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
-
+import './animation.scss'
 
 export const Correct = "img/Correct.svg"
 
 //正解アニメーション
-export function CorrectAnimation(trigger) { 
+export function CorrectAnimation(trigger,params) { 
   return (
     <Grow
     in={trigger}
     style={{ transformOrigin: '50% 50% 0' }}
     {...(trigger ? { timeout: 100 } : {})}
     >
-    <img style={{
-      zIndex:20,
-      position:"absolute",
-      top:0,
-      left:0,
-      right:0,
-      bottom:0,
-      margin:"auto",
-      }} src={Correct} width={`${style.canvasWidth}`} height={`${style.canvasHeight}`} />
+      <div style={{
+       zIndex:20,
+       position:"absolute",
+       top:0,
+       left:0,
+       right:0,
+       bottom:0,
+       margin:"auto", 
+       width:`${style.canvasWidth}`,
+       height:`${style.canvasHeight}`,
+      }}>
+        <img style={{
+          position:"absolute",
+          top:0,
+          left:0,
+          right:0,
+          bottom:0,
+          margin:"auto",
+          }} src={Correct} width={`${style.canvasWidth}`} height={`${style.canvasHeight}`} />
+          <div className="answer-txt">
+            {`答え:${params.answer} (回答者:${params.answerer})`}
+          </div>
+      </div>
     </Grow>
   )
 }

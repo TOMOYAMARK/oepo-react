@@ -119,7 +119,7 @@ export class CanvasContainer extends React.Component {
           onClickReset={e => this.handleClickReset(e)}
         />
 
-        {CorrectAnimation(this.props.onCorrect)}
+        {CorrectAnimation(this.props.onCorrect,this.props.answerParams)}
         {ShowResult(this.props.onGameFinished,() => this.props.closeResultWindow(),this.props.gameHistory,this.props.imageResults)}
       </div>
     )
