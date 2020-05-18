@@ -55,11 +55,11 @@ async function fetchOekakiTheme(name){
 }
 async function countOekakiTheme(){
   //お絵かきテーマ総数のカウント
-  var count;
+  var count
   await axios
     .post( "/api/count/theme")
     .then(res => {
-      console.log(res.data)
+      count = res.data.count
     })
     .catch(() => {
       console.log("エラー");
@@ -93,8 +93,8 @@ export class LobbyScreen extends React.Component{
 
   }
 
-  componentDidMount(){
-    var count = this.countOekakiTheme()
+  async componentDidMount(){
+    var count = await countOekakiTheme()
     this.setState({themeBoxCount:count})
   }
 

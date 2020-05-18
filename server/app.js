@@ -82,7 +82,7 @@ function fetchOekakiTheme(name){
   })
 }
 
-function fetchOekakiThemeCount(){
+function countOekakiTheme(){
   //お絵かきテーマの総数を取得
   return new Promise ((resolve,reject) => {
     var db = new sqlite3.Database(dbname);
@@ -90,12 +90,12 @@ function fetchOekakiThemeCount(){
 
     //データベースからランダムなお題を持ってきて返す。
     db.serialize(function() {  
-      db.get("select count(*) from oekaki_theme", function(err, row) {
+      db.get("select count(*) as count from oekaki_theme", function(err, row) {
         if(err){
           //**エラーレスポンス**/
           reject(err)
         }
-        data = row
+        data = row.count
         var now = new Date();
       });
     });
