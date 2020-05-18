@@ -82,6 +82,31 @@ function fetchOekakiTheme(name){
   })
 }
 
+function countOekakiTheme(){
+  //お絵かきテーマの総数を取得
+  return new Promise ((resolve,reject) => {
+    var db = new sqlite3.Database(dbname);
+    var data = {}
+
+    //データベースからランダムなお題を持ってきて返す。
+    db.serialize(function() {  
+      db.get("select count(*) as count from oekaki_theme", function(err, row) {
+        if(err){
+          //**エラーレスポンス**/
+          reject(err)
+        }
+        data = row.count
+        var now = new Date();
+      });
+    });
+    db.close(() => {
+      //成功のコールバック
+      resolve(data) 
+    });
+  }) 
+
+}
+
 //expressオブジェクトの生成とCORS設定
 const express = require("express");
 const bodyParser = require('body-parser');
@@ -160,6 +185,9 @@ app.post('/api/post/theme', async function (req, res) {
 
   db.close();
 
+})
+app.post('/api/count/theme', async function (req, res) {
+  res.json({count:await countOekakiTheme()})
 })
 app.post('/api/fetch/theme', async function(req, res) {
   res.json({theme:await fetchOekakiTheme(req.body.name)})
@@ -264,10 +292,13 @@ wscanvas.broadcast = function(data) {
 const Canvas = require('./Canvas.js');
 const canvas = new Canvas.Canvas();
 
+
+// canvas用のAPIエンドポイント
 app.post('/api/canvas/join', (req, res) => {
   res.json({
     base64Img: canvas.base64Img,
-    strokes: JSON.stringify(canvas.strokesWithoutPath),
+    strokes: canvas.strokesWithoutPath,
+    users: Object.keys(userIDMap),
   });
 });
 
@@ -340,10 +371,6 @@ wsgame.on('connection', function(ws) {
                     "state": "player",
                     "data": value
                 }))
-                wscanvas.broadcast(JSON.stringify({
-                    state: "join",
-                    data: value,
-                }));
             })
         }
         else if(data.state == "game-ready"){
