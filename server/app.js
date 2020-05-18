@@ -264,10 +264,13 @@ wscanvas.broadcast = function(data) {
 const Canvas = require('./Canvas.js');
 const canvas = new Canvas.Canvas();
 
+
+// canvas用のAPIエンドポイント
 app.post('/api/canvas/join', (req, res) => {
   res.json({
     base64Img: canvas.base64Img,
-    strokes: JSON.stringify(canvas.strokesWithoutPath),
+    strokes: canvas.strokesWithoutPath,
+    users: Object.keys(userIDMap),
   });
 });
 
@@ -340,10 +343,6 @@ wsgame.on('connection', function(ws) {
                     "state": "player",
                     "data": value
                 }))
-                wscanvas.broadcast(JSON.stringify({
-                    state: "join",
-                    data: value,
-                }));
             })
         }
         else if(data.state == "game-ready"){

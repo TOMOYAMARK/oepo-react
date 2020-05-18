@@ -23,7 +23,7 @@ class Canvas {
         hidden: stroke.hidden,
         base64Img: canvas.toDataURL('image/png'),
         palette: stroke.palette,
-        lastAct: (usrActs.length > 0 ? JSON.stringify(usrActs[usrActs.length-1]) : null),
+        lastAct: (usrActs.length > 0 ? usrActs[usrActs.length-1] : null),
       }
     });
     return strokes;
