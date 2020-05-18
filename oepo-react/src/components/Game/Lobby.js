@@ -15,6 +15,7 @@ import Icon from '@material-ui/core/Icon';
 import FormControl from '@material-ui/core/FormControl';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import Input from '@material-ui/core/Input';
+import Badge from '@material-ui/core/Badge';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -29,6 +30,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
+import { green } from '@material-ui/core/colors';
 
 
 
@@ -52,6 +54,19 @@ async function fetchOekakiTheme(name){
     }); 
     return theme
 }
+async function countOekakiTheme(){
+  //お絵かきテーマ総数のカウント
+  var count
+  await axios
+    .post( "/api/count/theme")
+    .then(res => {
+      count = res.data.count
+    })
+    .catch(() => {
+      console.log("エラー");
+    }); 
+    return count
+}
 
 //
 //Lobby画面Container
@@ -74,8 +89,15 @@ export class LobbyScreen extends React.Component{
       nullInputError:false,     //テーマが記入されていない
       priorTheme:null,          //お題箱、既存のテーマ表示用
       onPostSuccess:false,      //お題箱、投稿成功!
+      themeBoxCount:0,          //お題箱に含まれるテーマの総数カウント
+      odaibakoColor:"secondary",//お題箱の色をアニメーションさせるとき使う
     }
 
+  }
+
+  async componentDidMount(){
+    var count = await countOekakiTheme()
+    this.setState({themeBoxCount:count})
   }
 
   async verifyUser(username,password){
@@ -195,9 +217,14 @@ export class LobbyScreen extends React.Component{
         //内容を初期化し、ダイアログを閉じる
         this.setState({themePosterOpen:false})
         this.clearThemeInput()
+        this.setState({themeBoxCount:this.state.themeBoxCount+1})
 
         //snackbar成功通知
         this.setState({onPostSuccess:true})
+        //ボタンアニメーション
+
+        this.setState({odaibakoColor:"primary"})
+        setTimeout(() => this.setState({odaibakoColor:"secondary"}),500)
       }
     })
     .catch(() => {
@@ -271,7 +298,13 @@ export class LobbyScreen extends React.Component{
         </FormControl>
         </div>
           <Button style={{height:'50px',margin:"2px"}} variant="contained" color="primary" onClick={() => this.verifyUser(this.state.userName,this.state.password)}>ゲームへ</Button>
-          <Button style={{height:'50px',margin:"2px"}} variant="contained" endIcon={<SendIcon/>} color="secondary" onClick={() => {this.setState({themePosterOpen:true})}}>お題箱</Button>
+          <Button style={{height:'50px',margin:"2px"}} variant="contained" 
+          endIcon={
+              <Badge badgeContent={this.state.themeBoxCount} max="99999999">
+                <SendIcon />
+              </Badge>
+            }
+             color={this.state.odaibakoColor} onClick={() => {this.setState({themePosterOpen:true})}}>お題箱</Button>
         </div>
         <div>
         <Dialog
