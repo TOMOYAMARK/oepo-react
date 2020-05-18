@@ -30,6 +30,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
+import { green } from '@material-ui/core/colors';
 
 
 
@@ -89,6 +90,7 @@ export class LobbyScreen extends React.Component{
       priorTheme:null,          //お題箱、既存のテーマ表示用
       onPostSuccess:false,      //お題箱、投稿成功!
       themeBoxCount:0,          //お題箱に含まれるテーマの総数カウント
+      odaibakoColor:"secondary",//お題箱の色をアニメーションさせるとき使う
     }
 
   }
@@ -215,9 +217,14 @@ export class LobbyScreen extends React.Component{
         //内容を初期化し、ダイアログを閉じる
         this.setState({themePosterOpen:false})
         this.clearThemeInput()
+        this.setState({themeBoxCount:this.state.themeBoxCount+1})
 
         //snackbar成功通知
         this.setState({onPostSuccess:true})
+        //ボタンアニメーション
+
+        this.setState({odaibakoColor:"primary"})
+        setTimeout(() => this.setState({odaibakoColor:"secondary"}),500)
       }
     })
     .catch(() => {
@@ -297,7 +304,7 @@ export class LobbyScreen extends React.Component{
                 <SendIcon />
               </Badge>
             }
-             color="secondary" onClick={() => {this.setState({themePosterOpen:true})}}>お題箱</Button>
+             color={this.state.odaibakoColor} onClick={() => {this.setState({themePosterOpen:true})}}>お題箱</Button>
         </div>
         <div>
         <Dialog
