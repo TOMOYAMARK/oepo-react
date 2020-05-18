@@ -15,6 +15,7 @@ import Icon from '@material-ui/core/Icon';
 import FormControl from '@material-ui/core/FormControl';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import Input from '@material-ui/core/Input';
+import Badge from '@material-ui/core/Badge';
 import OutlinedInput from '@material-ui/core/OutlinedInput';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -52,6 +53,19 @@ async function fetchOekakiTheme(name){
     }); 
     return theme
 }
+async function countOekakiTheme(){
+  //お絵かきテーマ総数のカウント
+  var count;
+  await axios
+    .post( "/api/count/theme")
+    .then(res => {
+      console.log(res.data)
+    })
+    .catch(() => {
+      console.log("エラー");
+    }); 
+    return count
+}
 
 //
 //Lobby画面Container
@@ -74,8 +88,14 @@ export class LobbyScreen extends React.Component{
       nullInputError:false,     //テーマが記入されていない
       priorTheme:null,          //お題箱、既存のテーマ表示用
       onPostSuccess:false,      //お題箱、投稿成功!
+      themeBoxCount:0,          //お題箱に含まれるテーマの総数カウント
     }
 
+  }
+
+  componentDidMount(){
+    var count = this.countOekakiTheme()
+    this.setState({themeBoxCount:count})
   }
 
   async verifyUser(username,password){
@@ -271,7 +291,13 @@ export class LobbyScreen extends React.Component{
         </FormControl>
         </div>
           <Button style={{height:'50px',margin:"2px"}} variant="contained" color="primary" onClick={() => this.verifyUser(this.state.userName,this.state.password)}>ゲームへ</Button>
-          <Button style={{height:'50px',margin:"2px"}} variant="contained" endIcon={<SendIcon/>} color="secondary" onClick={() => {this.setState({themePosterOpen:true})}}>お題箱</Button>
+          <Button style={{height:'50px',margin:"2px"}} variant="contained" 
+          endIcon={
+              <Badge badgeContent={this.state.themeBoxCount} max="99999999">
+                <SendIcon />
+              </Badge>
+            }
+             color="secondary" onClick={() => {this.setState({themePosterOpen:true})}}>お題箱</Button>
         </div>
         <div>
         <Dialog
