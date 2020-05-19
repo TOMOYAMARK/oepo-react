@@ -7,6 +7,8 @@ import '../components/Canvas/Canvas.scss'
 import Grow from '@material-ui/core/Grow';
 import { Chip } from '@material-ui/core';
 import { Zoom } from '@material-ui/core';
+import { Fade } from '@material-ui/core';
+import { Slide } from '@material-ui/core';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
@@ -169,6 +171,32 @@ export function ShowResult(trigger,onClickClose,historyPayload,images) {
     </div>
   </Zoom>
   )
+}
+
+export function TimeUpAnimation(trigger,params){
+  return (
+    <Fade
+    in={trigger}
+    style={{ transformOrigin: '50% 50% 0' }}
+    {...(trigger ? { timeout: 800 } : {})}
+    >
+      <div style={{
+       zIndex:20,
+       position:"absolute",
+       top:0,
+       left:0,
+       right:0,
+       bottom:0,
+       margin:"auto", 
+       width:`${style.canvasWidth}`,
+       height:`${style.canvasHeight}`,
+      }}>
+          <div className="time-over-txt">
+            {`時間切れ。答え:${params.answer}`}
+          </div>
+      </div>
+    </Fade>
+  ) 
 }
 
 

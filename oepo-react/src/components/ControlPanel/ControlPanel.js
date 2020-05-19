@@ -123,6 +123,7 @@ export class ControlPanel extends React.Component{
             </div>
             <div>
             <button onClick={() => this.props.addPoints()}>ポイントを加算する</button>
+            <button onClick={() => this.props.timeUp()}>時間切れになる</button>
             </div>
             <p>ターン:{this.props.turnNum}</p>
             

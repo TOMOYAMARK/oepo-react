@@ -49,6 +49,7 @@ export class OekakiScreen extends React.Component{
     this.userMap = new Map([])        //ルーム内のユーザid->userオブジェクトの辞書
     this.duration = {
       onCorrect:4000,                  //正解時の待ち時間
+      onTimeUp:4000,                   //時間切れ時の待ち時間
       turnInterval:5000,               //次のターンへの移行の待ち時間
     }
     this.state = {
@@ -57,6 +58,7 @@ export class OekakiScreen extends React.Component{
       turnNum:0,                      //何ターン目        
       theme:{},                       //テーマ  
       onCorrect:false,                //正解アニメーションのトリガー  
+      onTimeUp:false,                 //時間切れアニメーションのトリガー
       onGameFinished:false,           //リザルト表示のトリガー
       onThemeUp:false,                 //テーマ表示のトリガー    
       imageResults: [],                //リザルトに表示する画像
@@ -223,6 +225,19 @@ export class OekakiScreen extends React.Component{
     }
     else if(msg.state === "turn-time-over"){
       //時間切れの処理
+      var theme = msg.params.theme
+      var answerParams = {
+        answer:theme.name,
+        answerer:null,
+      }
+      this.setState({answerParams:answerParams})
+
+      //正解アニメーションを起動します
+      this.showTimeUp()
+
+      //タイマーの停止初期化
+      clearInterval(this.gameTimer)
+      this.setState({gameCount:undefined})
 
       //!! すぐに次のターン/ゲーム終了を要請(アニメーション流すなら以降の処理のタイミングをずらす)  !!//
       var msgSending = {
@@ -232,7 +247,6 @@ export class OekakiScreen extends React.Component{
       
       const json = JSON.stringify(msgSending)
 
-      console.log("turn finished")
       //インターバル
       setTimeout(() => {
         //テーマをクリアして、準備完了！
@@ -298,6 +312,12 @@ export class OekakiScreen extends React.Component{
     this.props.makeSound(SE.CorrectAnswer)
     this.setState({onCorrect:true})
     setTimeout(() => this.setState({onCorrect:false}),this.duration.onCorrect)
+  }
+
+  showTimeUp(){
+    this.props.makeSound(SE.TimeUp)
+    this.setState({onTimeUp:true})
+    setTimeout(() => this.setState({onTimeUp:false}),this.duration.onTimeUp)
   }
 
   showResult(historyPayload){
@@ -372,6 +392,7 @@ export class OekakiScreen extends React.Component{
     
         <CanvasContainer
           onCorrect={this.state.onCorrect}
+          onTimeUp={this.state.onTimeUp}
           onGameFinished={this.state.onGameFinished}
           gameHistory={this.state.gameHistory}
           mainUsrId={this.props.user.id}
@@ -394,6 +415,7 @@ export class OekakiScreen extends React.Component{
         showOekakiTheme={() => this.showOekakiTheme()} users={this.state.users}
         turnNum = {this.state.turnNum}
         correct = {() => this.showCorrect()}
+        timeUp = {() => this.showTimeUp()}
         showResult = {() => this.showResult(resultData)}
         addPoints = {() => this.addPoints(10)}
          />

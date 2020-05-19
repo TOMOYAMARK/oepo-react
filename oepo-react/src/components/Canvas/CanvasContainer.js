@@ -3,7 +3,7 @@ import './Canvas.scss'
 import style from '../_variables.scss'
 import Canvas from './Canvas';
 import Palette from '../Palette/Palette';
-import {CorrectAnimation, ShowTheme,ShowResult} from '../../utils/animation'
+import {CorrectAnimation,TimeUpAnimation, ShowTheme,ShowResult} from '../../utils/animation'
 
 
 export class CanvasContainer extends React.Component {
@@ -121,6 +121,8 @@ export class CanvasContainer extends React.Component {
 
         {CorrectAnimation(this.props.onCorrect,this.props.answerParams)}
         {ShowResult(this.props.onGameFinished,() => this.props.closeResultWindow(),this.props.gameHistory,this.props.imageResults)}
+        {TimeUpAnimation(this.props.onTimeUp,this.props.answerParams)}
+        {/*GameOverAnimation(this.props.onGameOver)*/}
       </div>
     )
   }
