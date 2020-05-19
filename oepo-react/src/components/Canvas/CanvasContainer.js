@@ -100,6 +100,9 @@ export class CanvasContainer extends React.Component {
           onChangeForwardable={isAble => this.handleChangeForwardable(isAble)}
           onResetInCv={e => this.handleResetInCv()}
           onTurnEnd={img => this.props.onTurnEnd(img)}
+          makeSound={(se) => {
+            console.log("canvas")
+          this.props.makeSound(se)}}
         />
         <Palette
 

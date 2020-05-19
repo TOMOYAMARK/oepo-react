@@ -391,6 +391,7 @@ export class OekakiScreen extends React.Component{
            />
     
         <CanvasContainer
+          makeSound={(se) => this.props.makeSound(se)}
           onCorrect={this.state.onCorrect}
           onTimeUp={this.state.onTimeUp}
           onGameFinished={this.state.onGameFinished}

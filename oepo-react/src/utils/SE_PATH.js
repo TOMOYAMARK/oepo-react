@@ -6,4 +6,5 @@ export default{
   GameFinished : "se/GameFinished.mp3",
   Gong  : "se/Gong.mp3",
   TimeUp : "se/TimeUp.mp3",
+  Reset : "se/ClearPaper.mp3"
 }

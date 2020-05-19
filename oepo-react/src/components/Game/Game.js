@@ -117,6 +117,7 @@ export class Game extends React.Component{
   //効果音をトリガーするコンポーネントにpropsする。
   //require(utils.SE_PATH.js).SE.%鳴らす効果音の名前%をmakeSound()に渡すと、それが鳴ります。
   makeSound(se){
+    console.log(se)
     let soundStates = Object.assign({}, this.state.soundStates)
     soundStates[se] = true
 
@@ -139,7 +140,7 @@ export class Game extends React.Component{
           <Sound
             url={sound}
             playStatus={Sound.status.PLAYING}
-            playFromPosition={300 /* in milliseconds */}
+            playFromPosition={0 /* in milliseconds */}
             onFinishedPlaying={() => this.handleSongFinishedPlaying(sound)}
             volume={this.state.soundVolume}
           /> 

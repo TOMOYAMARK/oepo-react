@@ -1,5 +1,6 @@
 import React from 'react';
 import './Canvas.scss';
+import SE from '../../utils/SE_PATH'
 import axios from '../../utils/API';
 
 export default class Canvas extends React.Component {
@@ -577,6 +578,8 @@ export default class Canvas extends React.Component {
 
   handleResetButton() {
     console.log('handle reset');
+    //効果音
+    this.props.makeSound(SE.Reset)
 
     const json = {
       id: this.props.mainUsrId,
