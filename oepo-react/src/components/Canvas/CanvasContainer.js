@@ -3,7 +3,7 @@ import './Canvas.scss'
 import style from '../_variables.scss'
 import Canvas from './Canvas';
 import Palette from '../Palette/Palette';
-import {CorrectAnimation, ShowTheme,ShowResult} from '../../utils/animation'
+import {CorrectAnimation,TimeUpAnimation, ShowTheme,ShowResult} from '../../utils/animation'
 
 
 export class CanvasContainer extends React.Component {
@@ -100,6 +100,9 @@ export class CanvasContainer extends React.Component {
           onChangeForwardable={isAble => this.handleChangeForwardable(isAble)}
           onResetInCv={e => this.handleResetInCv()}
           onTurnEnd={img => this.props.onTurnEnd(img)}
+          makeSound={(se) => {
+            console.log("canvas")
+          this.props.makeSound(se)}}
         />
         <Palette
 
@@ -121,6 +124,8 @@ export class CanvasContainer extends React.Component {
 
         {CorrectAnimation(this.props.onCorrect,this.props.answerParams)}
         {ShowResult(this.props.onGameFinished,() => this.props.closeResultWindow(),this.props.gameHistory,this.props.imageResults)}
+        {TimeUpAnimation(this.props.onTimeUp,this.props.answerParams)}
+        {/*GameOverAnimation(this.props.onGameOver)*/}
       </div>
     )
   }
